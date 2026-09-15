@@ -7,12 +7,15 @@ import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
 import type { Invoice, LineItem } from "../types"
 import InvoiceDocument from "../components/InvoiceDocument"
+import { renderInvoiceTemplate } from "../lib/documentTemplates"
+import { sendEmail } from "../lib/email"
 
 export default function InvoiceEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { invoices, clients, products, business, saveInvoice, createBlankInvoice, getClient } = useData()
+  const { invoices, clients, products, business, templates, saveInvoice, createBlankInvoice, getClient } = useData()
   const { showToast } = useToast()
+  const [sending, setSending] = useState(false)
 
   const [searchParams] = useSearchParams()
   const isNew = !id || id === "new"
@@ -77,9 +80,23 @@ export default function InvoiceEditor() {
     navigate(`/invoices/${invoice.id}`)
   }
 
-  function handleSend() {
-    handleSave("sent", "Invoice sent to client")
-    navigate(`/invoices/${invoice.id}`)
+  async function handleSend() {
+    if (!client?.email) {
+      showToast("This client has no email address on file", "error")
+      return
+    }
+    setSending(true)
+    try {
+      const html = renderInvoiceTemplate(templates.invoiceHtml, invoice, client, business)
+      const subject = `Invoice ${invoice.number} from ${business.name}`
+      await sendEmail(client.email, subject, html)
+      handleSave("sent", "Invoice sent to client")
+      navigate(`/invoices/${invoice.id}`)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to send invoice", "error")
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -95,8 +112,8 @@ export default function InvoiceEditor() {
             <Button variant="secondary" onClick={handleSaveDraft} disabled={!canSave}>
               Save draft
             </Button>
-            <Button variant="primary" onClick={handleSend} disabled={!canSave}>
-              Send invoice
+            <Button variant="primary" onClick={handleSend} disabled={!canSave || sending}>
+              {sending ? "Sending..." : "Send invoice"}
             </Button>
           </>
         }

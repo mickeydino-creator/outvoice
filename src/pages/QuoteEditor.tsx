@@ -7,13 +7,16 @@ import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
 import type { LineItem, Quote } from "../types"
 import InvoiceDocument from "../components/InvoiceDocument"
+import { renderQuoteTemplate } from "../lib/documentTemplates"
+import { sendEmail } from "../lib/email"
 
 export default function QuoteEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { quotes, clients, products, business, saveQuote, createBlankQuote, getClient } = useData()
+  const { quotes, clients, products, business, templates, saveQuote, createBlankQuote, getClient } = useData()
   const { showToast } = useToast()
+  const [sending, setSending] = useState(false)
 
   const isNew = !id || id === "new"
   const existing = !isNew ? quotes.find((q) => q.id === id) : undefined
@@ -77,9 +80,23 @@ export default function QuoteEditor() {
     navigate(`/quotes/${quote.id}`)
   }
 
-  function handleSend() {
-    handleSave("sent", "Quote sent to client")
-    navigate(`/quotes/${quote.id}`)
+  async function handleSend() {
+    if (!client?.email) {
+      showToast("This client has no email address on file", "error")
+      return
+    }
+    setSending(true)
+    try {
+      const html = renderQuoteTemplate(templates.quoteHtml, quote, client, business)
+      const subject = `Quote ${quote.number} from ${business.name}`
+      await sendEmail(client.email, subject, html)
+      handleSave("sent", "Quote sent to client")
+      navigate(`/quotes/${quote.id}`)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to send quote", "error")
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -95,8 +112,8 @@ export default function QuoteEditor() {
             <Button variant="secondary" onClick={handleSaveDraft} disabled={!canSave}>
               Save draft
             </Button>
-            <Button variant="primary" onClick={handleSend} disabled={!canSave}>
-              Send quote
+            <Button variant="primary" onClick={handleSend} disabled={!canSave || sending}>
+              {sending ? "Sending..." : "Send quote"}
             </Button>
           </>
         }

@@ -1,9 +1,12 @@
-import { useRef, useState, type ChangeEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import PageHeader from "../components/PageHeader"
 import { useData } from "../store/DataContext"
 import { useToast } from "../store/ToastContext"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
+import { renderInvoiceTemplate, renderQuoteTemplate } from "../lib/documentTemplates"
+import { sanitizeHtml } from "../lib/sanitizeHtml"
+import type { Client } from "../types"
 
 const plans = [
   {
@@ -40,6 +43,7 @@ const tabs = [
   { key: "profile", label: "Business profile" },
   { key: "invoicing", label: "Invoicing" },
   { key: "email", label: "Email settings" },
+  { key: "templates", label: "Document Templates" },
   { key: "account", label: "Account" },
   { key: "billing", label: "Plan & billing" },
 ] as const
@@ -71,6 +75,7 @@ export default function Settings() {
         {tab === "profile" && <ProfileTab />}
         {tab === "invoicing" && <InvoicingTab />}
         {tab === "email" && <EmailTab />}
+        {tab === "templates" && <DocumentTemplatesTab />}
         {tab === "account" && <AccountTab />}
         {tab === "billing" && <BillingTab />}
       </div>
@@ -414,5 +419,155 @@ function CheckIcon() {
     <svg className="h-4 w-4 mt-0.5 shrink-0 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 6 9 17l-5-5" />
     </svg>
+  )
+}
+
+const TEMPLATE_VARIABLES = {
+  invoice: [
+    "{{business_name}}", "{{business_logo}}", "{{business_email}}", "{{business_address}}",
+    "{{client_name}}", "{{client_company}}", "{{client_email}}", "{{client_address}}",
+    "{{invoice_number}}", "{{issue_date}}", "{{due_date}}", "{{invoice_items}}",
+    "{{subtotal}}", "{{tax}}", "{{discount}}", "{{total}}", "{{notes}}",
+  ],
+  quote: [
+    "{{business_name}}", "{{business_logo}}", "{{business_email}}", "{{business_address}}",
+    "{{client_name}}", "{{client_company}}", "{{client_email}}", "{{client_address}}",
+    "{{quote_number}}", "{{issue_date}}", "{{expiry_date}}", "{{quote_items}}",
+    "{{subtotal}}", "{{tax}}", "{{discount}}", "{{total}}", "{{notes}}",
+  ],
+} as const
+
+const previewClient: Client = {
+  id: "preview",
+  name: "Jane Cooper",
+  company: "Acme Studio",
+  email: "jane@acmestudio.com",
+  phone: "+1 (555) 010-0100",
+  address: "123 Main St, San Francisco, CA",
+  createdAt: new Date().toISOString(),
+}
+
+const previewItems = [
+  { id: "1", description: "Design services", quantity: 2, unitPrice: 450, taxRate: 0 },
+  { id: "2", description: "Consulting", quantity: 1, unitPrice: 150, taxRate: 8.5 },
+]
+
+function DocumentTemplatesTab() {
+  const { business, templates, saveTemplate, resetTemplate } = useData()
+  const { showToast } = useToast()
+  const [docType, setDocType] = useState<"invoice" | "quote">("invoice")
+  const [draft, setDraft] = useState(templates.invoiceHtml)
+
+  useEffect(() => {
+    setDraft(docType === "invoice" ? templates.invoiceHtml : templates.quoteHtml)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docType])
+
+  const previewHtml = useMemo(() => {
+    const safe = sanitizeHtml(draft)
+    if (docType === "invoice") {
+      return renderInvoiceTemplate(
+        safe,
+        {
+          number: "INV-1001",
+          issueDate: new Date().toISOString(),
+          dueDate: new Date().toISOString(),
+          items: previewItems,
+          discount: 0,
+          notes: "Thank you for your business.",
+        },
+        previewClient,
+        business
+      )
+    }
+    return renderQuoteTemplate(
+      safe,
+      {
+        number: "QUO-2001",
+        issueDate: new Date().toISOString(),
+        expiryDate: new Date().toISOString(),
+        items: previewItems,
+        discount: 0,
+        notes: "This quote is valid for 14 days.",
+      },
+      previewClient,
+      business
+    )
+  }, [draft, docType, business])
+
+  function handleSave() {
+    saveTemplate(docType, draft)
+    showToast(`${docType === "invoice" ? "Invoice" : "Quote"} template saved`)
+  }
+
+  function handleReset() {
+    resetTemplate(docType)
+    showToast("Reset to default template", "info")
+  }
+
+  return (
+    <div className="space-y-4 max-w-6xl">
+      <div>
+        <h3 className="text-sm font-semibold text-slate-800 mb-1">Document Templates</h3>
+        <p className="text-sm text-slate-500">
+          Customize the HTML/CSS used when generating and emailing invoices and quotes. JavaScript is not allowed and
+          will be stripped automatically.
+        </p>
+      </div>
+
+      <div className="flex gap-2">
+        {(["invoice", "quote"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setDocType(t)}
+            className={`rounded-lg px-3.5 py-2 text-sm font-medium border transition-colors ${
+              docType === t ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {t === "invoice" ? "Invoice HTML" : "Quote HTML"}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-0 overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-slate-100 text-xs font-medium text-slate-500">Code editor</div>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            spellCheck={false}
+            className="w-full h-[420px] resize-none border-0 bg-slate-900 text-slate-100 font-mono text-xs p-4 outline-none"
+          />
+        </Card>
+
+        <Card className="p-0 overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-slate-100 text-xs font-medium text-slate-500">Live preview</div>
+          <iframe
+            title="Template preview"
+            srcDoc={previewHtml}
+            sandbox="allow-same-origin"
+            className="w-full h-[420px] bg-white"
+          />
+        </Card>
+      </div>
+
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-wrap gap-1.5 max-w-3xl">
+          {TEMPLATE_VARIABLES[docType].map((v) => (
+            <code key={v} className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+              {v}
+            </code>
+          ))}
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Button variant="secondary" onClick={handleReset}>
+            Reset to default
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }

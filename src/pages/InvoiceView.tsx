@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useData } from "../store/DataContext"
 import { useToast } from "../store/ToastContext"
@@ -5,12 +6,15 @@ import PageHeader from "../components/PageHeader"
 import { Button, StatusBadge } from "../components/ui"
 import InvoiceDocument from "../components/InvoiceDocument"
 import { effectiveStatus } from "../lib/calc"
+import { renderInvoiceTemplate } from "../lib/documentTemplates"
+import { sendEmail } from "../lib/email"
 
 export default function InvoiceView() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { invoices, getClient, business, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
+  const { invoices, getClient, business, templates, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
   const { showToast } = useToast()
+  const [sending, setSending] = useState(false)
 
   const invoice = invoices.find((inv) => inv.id === id)
 
@@ -28,10 +32,24 @@ export default function InvoiceView() {
   const client = getClient(invoice.clientId)
   const status = effectiveStatus(invoice)
 
-  function handleSend() {
+  async function handleSend() {
     if (!invoice) return
-    markInvoiceStatus(invoice.id, "sent")
-    showToast(`Invoice ${invoice.number} sent to ${client?.email ?? "client"}`)
+    if (!client?.email) {
+      showToast("This client has no email address on file", "error")
+      return
+    }
+    setSending(true)
+    try {
+      const html = renderInvoiceTemplate(templates.invoiceHtml, invoice, client, business)
+      const subject = `Invoice ${invoice.number} from ${business.name}`
+      await sendEmail(client.email, subject, html)
+      markInvoiceStatus(invoice.id, "sent")
+      showToast(`Invoice ${invoice.number} sent to ${client.email}`)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to send invoice", "error")
+    } finally {
+      setSending(false)
+    }
   }
 
   function handleMarkPaid() {
@@ -81,8 +99,8 @@ export default function InvoiceView() {
               Download PDF
             </Button>
             {status === "draft" && (
-              <Button variant="primary" onClick={handleSend}>
-                Send invoice
+              <Button variant="primary" onClick={handleSend} disabled={sending}>
+                {sending ? "Sending..." : "Send invoice"}
               </Button>
             )}
             {(status === "sent" || status === "overdue") && (

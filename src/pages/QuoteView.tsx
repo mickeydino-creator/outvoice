@@ -1,15 +1,19 @@
+import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useData } from "../store/DataContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, QuoteStatusBadge } from "../components/ui"
 import InvoiceDocument from "../components/InvoiceDocument"
+import { renderQuoteTemplate } from "../lib/documentTemplates"
+import { sendEmail } from "../lib/email"
 
 export default function QuoteView() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { quotes, getClient, business, markQuoteStatus, duplicateQuote, deleteQuote, convertQuoteToInvoice } = useData()
+  const { quotes, getClient, business, templates, markQuoteStatus, duplicateQuote, deleteQuote, convertQuoteToInvoice } = useData()
   const { showToast } = useToast()
+  const [sending, setSending] = useState(false)
 
   const quote = quotes.find((q) => q.id === id)
 
@@ -26,10 +30,24 @@ export default function QuoteView() {
 
   const client = getClient(quote.clientId)
 
-  function handleSend() {
+  async function handleSend() {
     if (!quote) return
-    markQuoteStatus(quote.id, "sent")
-    showToast(`Quote ${quote.number} sent to ${client?.email ?? "client"}`)
+    if (!client?.email) {
+      showToast("This client has no email address on file", "error")
+      return
+    }
+    setSending(true)
+    try {
+      const html = renderQuoteTemplate(templates.quoteHtml, quote, client, business)
+      const subject = `Quote ${quote.number} from ${business.name}`
+      await sendEmail(client.email, subject, html)
+      markQuoteStatus(quote.id, "sent")
+      showToast(`Quote ${quote.number} sent to ${client.email}`)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to send quote", "error")
+    } finally {
+      setSending(false)
+    }
   }
 
   function handleAccept() {
@@ -96,8 +114,8 @@ export default function QuoteView() {
               Download PDF
             </Button>
             {quote.status === "draft" && (
-              <Button variant="primary" onClick={handleSend}>
-                Send quote
+              <Button variant="primary" onClick={handleSend} disabled={sending}>
+                {sending ? "Sending..." : "Send quote"}
               </Button>
             )}
             {quote.status === "sent" && (

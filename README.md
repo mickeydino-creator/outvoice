@@ -1,4 +1,27 @@
-# React + TypeScript + Vite
+# InvoiceFlow
+
+## Setup: Supabase + Resend
+
+This app stores all data in Supabase and sends invoice/quote emails through Resend.
+
+1. **Supabase**
+   - Create a project at [supabase.com](https://supabase.com).
+   - Run the SQL in `supabase/migrations/0001_init.sql` against your project (SQL editor, or `supabase db push`).
+   - Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from your project's API settings.
+2. **Resend (server-side only)**
+   - Deploy the edge function in `supabase/functions/send-email` to your Supabase project:
+     ```
+     supabase functions deploy send-email
+     ```
+   - Set your Resend API key as a function secret (never in the frontend):
+     ```
+     supabase secrets set RESEND_API_KEY=your-resend-api-key
+     ```
+   - Optionally set a verified sender: `supabase secrets set RESEND_FROM_EMAIL="Your Business <billing@yourdomain.com>"`.
+
+Once both are configured, run `npm run dev`. The app starts with no data — go through onboarding and add your first client/invoice.
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 

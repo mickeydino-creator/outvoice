@@ -60,6 +60,11 @@ export interface Product {
   taxRate: number
 }
 
+export interface DocumentTemplates {
+  invoiceHtml: string
+  quoteHtml: string
+}
+
 export interface BusinessProfile {
   name: string
   businessType: string
