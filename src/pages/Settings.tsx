@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import PageHeader from "../components/PageHeader"
 import { useData } from "../store/DataContext"
 import { useToast } from "../store/ToastContext"
+import { useTutorial } from "../store/TutorialContext"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { renderInvoiceTemplate, renderQuoteTemplate } from "../lib/documentTemplates"
 import { sanitizeHtml } from "../lib/sanitizeHtml"
@@ -62,6 +63,7 @@ export default function Settings() {
           {tabs.map((t) => (
             <button
               key={t.key}
+              data-tutorial={t.key === "templates" ? "settings-templates-tab" : undefined}
               onClick={() => setTab(t.key)}
               className={`whitespace-nowrap px-3.5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 tab === t.key ? "border-blue-600 text-blue-700" : "border-transparent text-slate-500 hover:text-slate-800"
@@ -311,6 +313,7 @@ function EmailTab() {
 function AccountTab() {
   const { business, updateBusiness } = useData()
   const { showToast } = useToast()
+  const { start: startTutorial } = useTutorial()
   const navigate = useNavigate()
 
   return (
@@ -342,17 +345,22 @@ function AccountTab() {
       </Card>
 
       <Card className="p-5">
-        <h3 className="text-sm font-semibold text-slate-800 mb-1">Onboarding</h3>
-        <p className="text-sm text-slate-500 mb-4">Replay the initial setup wizard.</p>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            updateBusiness({ onboarded: false })
-            navigate("/onboarding")
-          }}
-        >
-          Restart onboarding
-        </Button>
+        <h3 className="text-sm font-semibold text-slate-800 mb-1">Help</h3>
+        <p className="text-sm text-slate-500 mb-4">Replay the initial setup wizard, or the interactive app tutorial.</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              updateBusiness({ onboarded: false })
+              navigate("/onboarding")
+            }}
+          >
+            Restart onboarding
+          </Button>
+          <Button variant="secondary" onClick={startTutorial}>
+            Replay tutorial
+          </Button>
+        </div>
       </Card>
 
       <Card className="p-5 border-red-100">

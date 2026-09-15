@@ -5,8 +5,7 @@ import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, QuoteStatusBadge } from "../components/ui"
 import InvoiceDocument from "../components/InvoiceDocument"
-import { renderQuoteTemplate } from "../lib/documentTemplates"
-import { sendEmail } from "../lib/email"
+import { sendQuoteByEmail } from "../lib/documentEmail"
 
 export default function QuoteView() {
   const { id } = useParams()
@@ -38,9 +37,7 @@ export default function QuoteView() {
     }
     setSending(true)
     try {
-      const html = renderQuoteTemplate(templates.quoteHtml, quote, client, business)
-      const subject = `Quote ${quote.number} from ${business.name}`
-      await sendEmail(client.email, subject, html)
+      await sendQuoteByEmail(quote, client, business, templates.quoteHtml)
       markQuoteStatus(quote.id, "sent")
       showToast(`Quote ${quote.number} sent to ${client.email}`)
     } catch (err) {

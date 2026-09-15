@@ -1,12 +1,14 @@
 import { useRef, useState, type ChangeEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import { useData } from "../store/DataContext"
+import { useTutorial } from "../store/TutorialContext"
 import { Button, Input, Select } from "../components/ui"
 
 const steps = ["Business name", "Business type", "Country", "Currency", "Logo", "Payment terms"]
 
 export default function Onboarding() {
   const { business, completeOnboarding } = useData()
+  const { start: startTutorial, hasSeenTutorial } = useTutorial()
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -49,7 +51,11 @@ export default function Onboarding() {
       logoInitial: form.name.charAt(0).toUpperCase() || "?",
       defaultPaymentTerms: form.defaultPaymentTerms,
     })
-    navigate("/")
+    if (!hasSeenTutorial) {
+      startTutorial()
+    } else {
+      navigate("/")
+    }
   }
 
   return (

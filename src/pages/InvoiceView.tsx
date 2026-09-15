@@ -6,8 +6,7 @@ import PageHeader from "../components/PageHeader"
 import { Button, StatusBadge } from "../components/ui"
 import InvoiceDocument from "../components/InvoiceDocument"
 import { effectiveStatus } from "../lib/calc"
-import { renderInvoiceTemplate } from "../lib/documentTemplates"
-import { sendEmail } from "../lib/email"
+import { sendInvoiceByEmail } from "../lib/documentEmail"
 
 export default function InvoiceView() {
   const { id } = useParams()
@@ -40,9 +39,7 @@ export default function InvoiceView() {
     }
     setSending(true)
     try {
-      const html = renderInvoiceTemplate(templates.invoiceHtml, invoice, client, business)
-      const subject = `Invoice ${invoice.number} from ${business.name}`
-      await sendEmail(client.email, subject, html)
+      await sendInvoiceByEmail(invoice, client, business, templates.invoiceHtml)
       markInvoiceStatus(invoice.id, "sent")
       showToast(`Invoice ${invoice.number} sent to ${client.email}`)
     } catch (err) {

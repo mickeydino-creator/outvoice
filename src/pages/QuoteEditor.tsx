@@ -7,8 +7,7 @@ import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
 import type { LineItem, Quote } from "../types"
 import InvoiceDocument from "../components/InvoiceDocument"
-import { renderQuoteTemplate } from "../lib/documentTemplates"
-import { sendEmail } from "../lib/email"
+import { sendQuoteByEmail } from "../lib/documentEmail"
 
 export default function QuoteEditor() {
   const { id } = useParams()
@@ -87,9 +86,7 @@ export default function QuoteEditor() {
     }
     setSending(true)
     try {
-      const html = renderQuoteTemplate(templates.quoteHtml, quote, client, business)
-      const subject = `Quote ${quote.number} from ${business.name}`
-      await sendEmail(client.email, subject, html)
+      await sendQuoteByEmail(quote, client, business, templates.quoteHtml)
       handleSave("sent", "Quote sent to client")
       navigate(`/quotes/${quote.id}`)
     } catch (err) {

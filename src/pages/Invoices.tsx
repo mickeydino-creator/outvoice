@@ -39,7 +39,7 @@ export default function Invoices() {
         }
       />
 
-      <div className="px-4 lg:px-8 pb-10 space-y-4">
+      <div data-tutorial="invoices-page" className="px-4 lg:px-8 pb-10 space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />

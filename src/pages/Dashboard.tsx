@@ -72,13 +72,13 @@ export default function Dashboard() {
         subtitle="Here's how your business is doing."
         actions={
           <div className="flex gap-2">
-            <Link to="/clients?new=1">
+            <Link to="/clients?new=1" data-tutorial="action-add-client">
               <ActionButton label="Add Client" variant="secondary" />
             </Link>
-            <Link to="/quotes/new">
+            <Link to="/quotes/new" data-tutorial="action-create-quote">
               <ActionButton label="Create Quote" variant="secondary" />
             </Link>
-            <Link to="/invoices/new">
+            <Link to="/invoices/new" data-tutorial="action-create-invoice">
               <ActionButton label="Create Invoice" variant="primary" />
             </Link>
           </div>
@@ -86,7 +86,7 @@ export default function Dashboard() {
       />
 
       <div className="px-4 lg:px-8 pb-10 space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div data-tutorial="dashboard-overview" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Total revenue" value={formatCurrency(stats.totalRevenue, business.currency)} tone="ink" />
           <StatCard label="Outstanding" value={formatCurrency(stats.outstanding, business.currency)} tone="blue" />
           <StatCard label="Overdue" value={formatCurrency(stats.overdue, business.currency)} tone="red" />

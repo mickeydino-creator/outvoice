@@ -7,8 +7,7 @@ import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
 import type { Invoice, LineItem } from "../types"
 import InvoiceDocument from "../components/InvoiceDocument"
-import { renderInvoiceTemplate } from "../lib/documentTemplates"
-import { sendEmail } from "../lib/email"
+import { sendInvoiceByEmail } from "../lib/documentEmail"
 
 export default function InvoiceEditor() {
   const { id } = useParams()
@@ -87,9 +86,7 @@ export default function InvoiceEditor() {
     }
     setSending(true)
     try {
-      const html = renderInvoiceTemplate(templates.invoiceHtml, invoice, client, business)
-      const subject = `Invoice ${invoice.number} from ${business.name}`
-      await sendEmail(client.email, subject, html)
+      await sendInvoiceByEmail(invoice, client, business, templates.invoiceHtml)
       handleSave("sent", "Invoice sent to client")
       navigate(`/invoices/${invoice.id}`)
     } catch (err) {

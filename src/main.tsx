@@ -5,13 +5,18 @@ import "./index.css"
 import App from "./App.tsx"
 import { DataProvider } from "./store/DataContext.tsx"
 import { ToastProvider } from "./store/ToastContext.tsx"
+import { TutorialProvider } from "./store/TutorialContext.tsx"
+import TutorialOverlay from "./components/TutorialOverlay.tsx"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
         <DataProvider>
-          <App />
+          <TutorialProvider>
+            <App />
+            <TutorialOverlay />
+          </TutorialProvider>
         </DataProvider>
       </ToastProvider>
     </BrowserRouter>

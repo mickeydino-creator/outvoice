@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { to, subject, html } = await req.json()
+    const { to, subject, html, attachments } = await req.json()
 
     if (!to || !subject || !html) {
       return new Response(JSON.stringify({ error: "Missing required fields: to, subject, html" }), {
@@ -54,6 +54,7 @@ Deno.serve(async (req: Request) => {
         to: [to],
         subject,
         html,
+        ...(Array.isArray(attachments) && attachments.length > 0 ? { attachments } : {}),
       }),
     })
 

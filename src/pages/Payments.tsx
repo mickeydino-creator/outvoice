@@ -48,7 +48,7 @@ export default function Payments() {
       <PageHeader title="Payments" subtitle="Track what's been paid, what's pending, and what's overdue." />
 
       <div className="px-4 lg:px-8 pb-10 space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div data-tutorial="payments-overview" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="p-4">
             <p className="text-xs font-medium text-slate-500">Paid</p>
             <p className="mt-2 text-xl font-semibold text-emerald-600">{formatCurrency(stats.paid, business.currency)}</p>
