@@ -61,11 +61,8 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
-            IF
-          </div>
-          <span className="font-semibold text-slate-900 tracking-tight">InvoiceFlow</span>
+        <div className="flex items-center justify-center mb-8">
+          <img src="/logo.jpg" alt="Invoxa" className="h-8 w-auto" />
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 sm:p-8">

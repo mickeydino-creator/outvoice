@@ -24,11 +24,8 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-slate-50 lg:flex">
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-200 bg-white">
-        <div className="flex items-center gap-2.5 px-6 h-16 border-b border-slate-100">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
-            IF
-          </div>
-          <span className="font-semibold text-slate-900 tracking-tight">InvoiceFlow</span>
+        <div className="flex items-center px-6 h-16 border-b border-slate-100">
+          <img src="/logo.jpg" alt="Invoxa" className="h-8 w-auto" />
         </div>
 
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
