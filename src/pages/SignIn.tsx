@@ -5,13 +5,12 @@ import { Button, Input, Label } from "../components/ui"
 import { AuthShell } from "./SignUp"
 
 export default function SignIn() {
-  const { user, loading, signIn, resetPassword } = useAuth()
+  const { user, loading, signIn } = useAuth()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   if (!loading && user) return <Navigate to="/dashboard" replace />
@@ -19,7 +18,6 @@ export default function SignIn() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    setInfo(null)
 
     if (!email.trim() || !password) {
       setError("Please enter your email and password.")
@@ -36,21 +34,6 @@ export default function SignIn() {
     }
 
     navigate("/dashboard")
-  }
-
-  async function handleForgotPassword() {
-    setError(null)
-    setInfo(null)
-    if (!email.trim()) {
-      setError("Enter your email above first, then click \"Forgot password?\".")
-      return
-    }
-    const { error: resetError } = await resetPassword(email.trim())
-    if (resetError) {
-      setError(resetError)
-      return
-    }
-    setInfo("If an account exists for that email, a password reset link is on its way.")
   }
 
   return (
@@ -71,9 +54,7 @@ export default function SignIn() {
           />
         </div>
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <Label>Password</Label>
-          </div>
+          <Label>Password</Label>
           <Input
             type="password"
             value={password}
@@ -81,17 +62,9 @@ export default function SignIn() {
             placeholder="Your password"
             autoComplete="current-password"
           />
-          <button
-            type="button"
-            onClick={handleForgotPassword}
-            className="mt-1.5 text-xs font-medium text-blue-600 hover:text-blue-700"
-          >
-            Forgot password?
-          </button>
         </div>
 
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
-        {info && <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700">{info}</p>}
 
         <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
           {submitting ? "Signing in..." : "Sign In"}
