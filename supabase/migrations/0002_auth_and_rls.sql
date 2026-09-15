@@ -20,12 +20,17 @@ alter table business_profile drop constraint if exists single_row;
 alter table business_profile add column if not exists user_id uuid references auth.users(id) on delete cascade;
 alter table business_profile drop constraint if exists business_profile_pkey;
 alter table business_profile drop column if exists id;
+alter table business_profile drop constraint if exists business_profile_user_unique;
 alter table business_profile add constraint business_profile_user_unique unique (user_id);
 
--- 3. document_templates: was a single global row per type — now one pair (invoice/quote) per user
+-- 3. document_templates: was a single global row per type — now one pair (invoice/quote) per user.
+-- Uses a plain unique constraint (not a primary key) so existing rows can keep
+-- a NULL user_id for now — a primary key column can never be NULL, but a
+-- unique constraint allows it, since Postgres treats each NULL as distinct.
 alter table document_templates drop constraint if exists document_templates_pkey;
 alter table document_templates add column if not exists user_id uuid references auth.users(id) on delete cascade;
-alter table document_templates add primary key (user_id, type);
+alter table document_templates drop constraint if exists document_templates_user_type_unique;
+alter table document_templates add constraint document_templates_user_type_unique unique (user_id, type);
 
 -- 4. Replace the old permissive "anyone can read/write everything" policies
 -- with ones scoped to the authenticated owner.
