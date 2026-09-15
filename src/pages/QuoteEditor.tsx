@@ -5,51 +5,51 @@ import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
-import type { Invoice, LineItem } from "../types"
+import type { LineItem, Quote } from "../types"
 import InvoiceDocument from "../components/InvoiceDocument"
 
-export default function InvoiceEditor() {
+export default function QuoteEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { invoices, clients, products, business, saveInvoice, createBlankInvoice, getClient } = useData()
+  const [searchParams] = useSearchParams()
+  const { quotes, clients, products, business, saveQuote, createBlankQuote, getClient } = useData()
   const { showToast } = useToast()
 
-  const [searchParams] = useSearchParams()
   const isNew = !id || id === "new"
-  const existing = !isNew ? invoices.find((inv) => inv.id === id) : undefined
-  const [invoice, setInvoice] = useState<Invoice>(() => {
+  const existing = !isNew ? quotes.find((q) => q.id === id) : undefined
+  const [quote, setQuote] = useState<Quote>(() => {
     if (existing) return existing
-    const blank = createBlankInvoice()
+    const blank = createBlankQuote()
     const preselectedClient = searchParams.get("client")
     if (preselectedClient) blank.clientId = preselectedClient
     return blank
   })
   const [showPreview, setShowPreview] = useState(false)
 
-  const client = getClient(invoice.clientId)
-  const subtotal = invoiceSubtotal(invoice.items)
-  const tax = invoiceTax(invoice.items)
-  const total = invoiceTotal(invoice)
+  const client = getClient(quote.clientId)
+  const subtotal = invoiceSubtotal(quote.items)
+  const tax = invoiceTax(quote.items)
+  const total = invoiceTotal(quote)
 
-  function updateField<K extends keyof Invoice>(key: K, value: Invoice[K]) {
-    setInvoice((prev) => ({ ...prev, [key]: value }))
+  function updateField<K extends keyof Quote>(key: K, value: Quote[K]) {
+    setQuote((prev) => ({ ...prev, [key]: value }))
   }
 
   function updateItem(itemId: string, patch: Partial<LineItem>) {
-    setInvoice((prev) => ({
+    setQuote((prev) => ({
       ...prev,
       items: prev.items.map((it) => (it.id === itemId ? { ...it, ...patch } : it)),
     }))
   }
 
   function addItem() {
-    setInvoice((prev) => ({ ...prev, items: [...prev.items, makeBlankLineItem()] }))
+    setQuote((prev) => ({ ...prev, items: [...prev.items, makeBlankLineItem()] }))
   }
 
   function addProductItem(productId: string) {
     const product = products.find((p) => p.id === productId)
     if (!product) return
-    setInvoice((prev) => ({
+    setQuote((prev) => ({
       ...prev,
       items: [
         ...prev.items,
@@ -59,33 +59,33 @@ export default function InvoiceEditor() {
   }
 
   function removeItem(itemId: string) {
-    setInvoice((prev) => ({ ...prev, items: prev.items.filter((it) => it.id !== itemId) }))
+    setQuote((prev) => ({ ...prev, items: prev.items.filter((it) => it.id !== itemId) }))
   }
 
-  const canSave = useMemo(() => !!invoice.clientId && invoice.items.some((it) => it.description.trim()), [invoice])
+  const canSave = useMemo(() => !!quote.clientId && quote.items.some((it) => it.description.trim()), [quote])
 
-  function handleSave(status?: Invoice["status"], andToast?: string) {
-    const toSave = status ? { ...invoice, status } : invoice
-    saveInvoice(toSave)
-    setInvoice(toSave)
+  function handleSave(status?: Quote["status"], andToast?: string) {
+    const toSave = status ? { ...quote, status } : quote
+    saveQuote(toSave)
+    setQuote(toSave)
     if (andToast) showToast(andToast)
     return toSave
   }
 
   function handleSaveDraft() {
     handleSave("draft", "Draft saved")
-    navigate(`/invoices/${invoice.id}`)
+    navigate(`/quotes/${quote.id}`)
   }
 
   function handleSend() {
-    handleSave("sent", "Invoice sent to client")
-    navigate(`/invoices/${invoice.id}`)
+    handleSave("sent", "Quote sent to client")
+    navigate(`/quotes/${quote.id}`)
   }
 
   return (
     <div>
       <PageHeader
-        title={isNew ? "Create Invoice" : `Edit ${invoice.number}`}
+        title={isNew ? "Create Quote" : `Edit ${quote.number}`}
         subtitle="Fill in the details below — totals are calculated automatically."
         actions={
           <>
@@ -96,7 +96,7 @@ export default function InvoiceEditor() {
               Save draft
             </Button>
             <Button variant="primary" onClick={handleSend} disabled={!canSave}>
-              Send invoice
+              Send quote
             </Button>
           </>
         }
@@ -104,16 +104,22 @@ export default function InvoiceEditor() {
 
       <div className="px-4 lg:px-8 pb-16">
         {showPreview ? (
-          <InvoiceDocument invoice={invoice} client={client} business={business} />
+          <InvoiceDocument
+            invoice={{ ...quote, dueDate: quote.expiryDate }}
+            client={client}
+            business={business}
+            kind="quote"
+            dateLabel="Valid until"
+          />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <Card className="p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-800">Invoice details</h3>
+                <h3 className="text-sm font-semibold text-slate-800">Quote details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Client</Label>
-                    <Select value={invoice.clientId} onChange={(e) => updateField("clientId", e.target.value)}>
+                    <Select value={quote.clientId} onChange={(e) => updateField("clientId", e.target.value)}>
                       <option value="">Select a client</option>
                       {clients.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -123,28 +129,28 @@ export default function InvoiceEditor() {
                     </Select>
                   </div>
                   <div>
-                    <Label>Invoice number</Label>
-                    <Input value={invoice.number} onChange={(e) => updateField("number", e.target.value)} />
+                    <Label>Quote number</Label>
+                    <Input value={quote.number} onChange={(e) => updateField("number", e.target.value)} />
                   </div>
                   <div>
                     <Label>Issue date</Label>
                     <Input
                       type="date"
-                      value={invoice.issueDate.slice(0, 10)}
+                      value={quote.issueDate.slice(0, 10)}
                       onChange={(e) => updateField("issueDate", new Date(e.target.value).toISOString())}
                     />
                   </div>
                   <div>
-                    <Label>Due date</Label>
+                    <Label>Expiry date</Label>
                     <Input
                       type="date"
-                      value={invoice.dueDate.slice(0, 10)}
-                      onChange={(e) => updateField("dueDate", new Date(e.target.value).toISOString())}
+                      value={quote.expiryDate.slice(0, 10)}
+                      onChange={(e) => updateField("expiryDate", new Date(e.target.value).toISOString())}
                     />
                   </div>
                   <div>
                     <Label>Payment terms</Label>
-                    <Select value={invoice.paymentTerms} onChange={(e) => updateField("paymentTerms", e.target.value)}>
+                    <Select value={quote.paymentTerms} onChange={(e) => updateField("paymentTerms", e.target.value)}>
                       <option>Due on receipt</option>
                       <option>Net 7</option>
                       <option>Net 14</option>
@@ -189,7 +195,7 @@ export default function InvoiceEditor() {
                     <div className="col-span-1">Tax %</div>
                     <div className="col-span-2 text-right">Amount</div>
                   </div>
-                  {invoice.items.map((item) => (
+                  {quote.items.map((item) => (
                     <div key={item.id} className="grid grid-cols-2 sm:grid-cols-12 gap-3 items-center">
                       <div className="col-span-2 sm:col-span-5">
                         <Input
@@ -245,7 +251,7 @@ export default function InvoiceEditor() {
                   <Input
                     type="number"
                     min={0}
-                    value={invoice.discount}
+                    value={quote.discount}
                     onChange={(e) => updateField("discount", Number(e.target.value))}
                     className="max-w-xs"
                   />
@@ -254,8 +260,8 @@ export default function InvoiceEditor() {
                   <Label>Notes</Label>
                   <Textarea
                     rows={3}
-                    placeholder="Thank you for your business..."
-                    value={invoice.notes}
+                    placeholder="This quote is valid for 14 days..."
+                    value={quote.notes}
                     onChange={(e) => updateField("notes", e.target.value)}
                   />
                 </div>
@@ -267,7 +273,7 @@ export default function InvoiceEditor() {
                 <h3 className="text-sm font-semibold text-slate-800 mb-1">Summary</h3>
                 <SummaryRow label="Subtotal" value={formatCurrency(subtotal, business.currency)} />
                 <SummaryRow label="Tax" value={formatCurrency(tax, business.currency)} />
-                <SummaryRow label="Discount" value={`-${formatCurrency(invoice.discount, business.currency)}`} />
+                <SummaryRow label="Discount" value={`-${formatCurrency(quote.discount, business.currency)}`} />
                 <div className="pt-3 border-t border-slate-100 flex justify-between">
                   <span className="text-sm font-semibold text-slate-800">Total</span>
                   <span className="text-lg font-semibold text-slate-900">{formatCurrency(total, business.currency)}</span>

@@ -75,6 +75,9 @@ export default function Dashboard() {
             <Link to="/clients?new=1">
               <ActionButton label="Add Client" variant="secondary" />
             </Link>
+            <Link to="/quotes/new">
+              <ActionButton label="Create Quote" variant="secondary" />
+            </Link>
             <Link to="/invoices/new">
               <ActionButton label="Create Invoice" variant="primary" />
             </Link>

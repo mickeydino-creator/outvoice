@@ -1,4 +1,5 @@
 export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue"
+export type QuoteStatus = "draft" | "sent" | "accepted" | "declined" | "converted"
 
 export interface LineItem {
   id: string
@@ -6,6 +7,7 @@ export interface LineItem {
   quantity: number
   unitPrice: number
   taxRate: number
+  productId?: string
 }
 
 export interface Client {
@@ -34,11 +36,46 @@ export interface Invoice {
   paidAt?: string
 }
 
+export interface Quote {
+  id: string
+  number: string
+  clientId: string
+  issueDate: string
+  expiryDate: string
+  items: LineItem[]
+  discount: number
+  notes: string
+  paymentTerms: string
+  status: QuoteStatus
+  createdAt: string
+  sentAt?: string
+  convertedInvoiceId?: string
+}
+
+export interface Product {
+  id: string
+  name: string
+  description: string
+  price: number
+  taxRate: number
+}
+
 export interface BusinessProfile {
   name: string
+  businessType: string
+  country: string
   email: string
   phone: string
   address: string
   currency: string
   logoInitial: string
+  logoDataUrl?: string
+  invoicePrefix: string
+  defaultTaxRate: number
+  taxLabel: string
+  defaultPaymentTerms: string
+  invoiceFooter: string
+  emailSubjectTemplate: string
+  emailBodyTemplate: string
+  onboarded: boolean
 }

@@ -1,4 +1,4 @@
-import type { BusinessProfile, Client, Invoice } from "../types"
+import type { BusinessProfile, Client, Invoice, Product, Quote } from "../types"
 
 function daysAgo(n: number) {
   const d = new Date()
@@ -14,11 +14,21 @@ function daysFromNow(n: number) {
 
 export const businessProfile: BusinessProfile = {
   name: "Northwind Creative Agency",
+  businessType: "Design & Creative Agency",
+  country: "United States",
   email: "hello@northwindcreative.com",
   phone: "+1 (415) 555-0182",
   address: "482 Market Street, Suite 300\nSan Francisco, CA 94105",
   currency: "USD",
   logoInitial: "N",
+  invoicePrefix: "INV",
+  defaultTaxRate: 0,
+  taxLabel: "Tax",
+  defaultPaymentTerms: "Net 14",
+  invoiceFooter: "Thank you for the opportunity to work together.",
+  emailSubjectTemplate: "Invoice {number} from {business}",
+  emailBodyTemplate: "Hi {client},\n\nPlease find attached invoice {number} for {total}, due {dueDate}.\n\nThanks,\n{business}",
+  onboarded: true,
 }
 
 export const seedClients: Client[] = [
@@ -203,5 +213,87 @@ export const seedInvoices: Invoice[] = [
     createdAt: daysAgo(60),
     sentAt: daysAgo(60),
     paidAt: daysAgo(52),
+  },
+]
+
+export const seedProducts: Product[] = [
+  { id: "p1", name: "Brand identity design", description: "Logo, color palette, and typography system", price: 3200, taxRate: 0 },
+  { id: "p2", name: "Style guide document", description: "Comprehensive brand usage guidelines", price: 800, taxRate: 0 },
+  { id: "p3", name: "Website design (per page)", description: "Custom responsive page design", price: 650, taxRate: 0 },
+  { id: "p4", name: "Social media management (monthly)", description: "Content, scheduling, and reporting across platforms", price: 1800, taxRate: 0 },
+  { id: "p5", name: "Photography session (half day)", description: "Up to 4 hours on location", price: 450, taxRate: 8.5 },
+  { id: "p6", name: "Consulting (hourly)", description: "Strategy and advisory sessions", price: 150, taxRate: 0 },
+]
+
+export const seedQuotes: Quote[] = [
+  {
+    id: "q1",
+    number: "QUO-2031",
+    clientId: "c5",
+    issueDate: daysAgo(4),
+    expiryDate: daysFromNow(10),
+    items: items(["Full brand refresh", 1, 4200, 0], ["Website redesign (5 pages)", 1, 3250, 0]),
+    discount: 0,
+    notes: "Quote valid for 14 days from issue date.",
+    paymentTerms: "Net 14",
+    status: "sent",
+    createdAt: daysAgo(4),
+    sentAt: daysAgo(4),
+  },
+  {
+    id: "q2",
+    number: "QUO-2030",
+    clientId: "c2",
+    issueDate: daysAgo(9),
+    expiryDate: daysFromNow(5),
+    items: items(["Listing photography package", 3, 450, 8.5]),
+    discount: 0,
+    notes: "",
+    paymentTerms: "Net 14",
+    status: "accepted",
+    createdAt: daysAgo(9),
+    sentAt: daysAgo(9),
+  },
+  {
+    id: "q3",
+    number: "QUO-2029",
+    clientId: "c6",
+    issueDate: daysAgo(40),
+    expiryDate: daysAgo(26),
+    items: items(["Bathroom remodel consultation", 1, 320, 0]),
+    discount: 0,
+    notes: "",
+    paymentTerms: "Net 14",
+    status: "declined",
+    createdAt: daysAgo(40),
+    sentAt: daysAgo(40),
+  },
+  {
+    id: "q4",
+    number: "QUO-2028",
+    clientId: "c2",
+    issueDate: daysAgo(60),
+    expiryDate: daysAgo(46),
+    items: items(["Listing photography (half day)", 1, 450, 8.5], ["Drone footage add-on", 1, 175, 8.5]),
+    discount: 25,
+    notes: "",
+    paymentTerms: "Net 14",
+    status: "converted",
+    createdAt: daysAgo(60),
+    sentAt: daysAgo(60),
+    convertedInvoiceId: "inv2",
+  },
+  {
+    id: "q5",
+    number: "QUO-2032",
+    clientId: "c4",
+    issueDate: daysAgo(1),
+    expiryDate: daysFromNow(13),
+    items: items(["Annual website maintenance plan", 1, 4800, 0]),
+    discount: 400,
+    notes: "10% discount for annual commitment.",
+    paymentTerms: "Net 14",
+    status: "draft",
+    createdAt: daysAgo(1),
   },
 ]

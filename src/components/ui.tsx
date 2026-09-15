@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react"
-import type { InvoiceStatus } from "../types"
+import type { InvoiceStatus, QuoteStatus } from "../types"
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
@@ -81,6 +81,30 @@ export function StatusBadge({ status }: { status: InvoiceStatus }) {
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[status]}`}>
       {statusLabels[status]}
+    </span>
+  )
+}
+
+const quoteStatusStyles: Record<QuoteStatus, string> = {
+  draft: "bg-slate-100 text-slate-600",
+  sent: "bg-blue-50 text-blue-600",
+  accepted: "bg-emerald-50 text-emerald-600",
+  declined: "bg-red-50 text-red-600",
+  converted: "bg-violet-50 text-violet-600",
+}
+
+const quoteStatusLabels: Record<QuoteStatus, string> = {
+  draft: "Draft",
+  sent: "Sent",
+  accepted: "Accepted",
+  declined: "Declined",
+  converted: "Converted",
+}
+
+export function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${quoteStatusStyles[status]}`}>
+      {quoteStatusLabels[status]}
     </span>
   )
 }

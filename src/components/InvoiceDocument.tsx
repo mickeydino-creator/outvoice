@@ -1,14 +1,28 @@
-import type { BusinessProfile, Client, Invoice } from "../types"
+import type { BusinessProfile, Client, LineItem } from "../types"
 import { formatCurrency, formatDate, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
+
+interface DocumentLike {
+  number: string
+  issueDate: string
+  dueDate: string
+  items: LineItem[]
+  discount: number
+  notes: string
+  paymentTerms: string
+}
 
 export default function InvoiceDocument({
   invoice,
   client,
   business,
+  kind = "invoice",
+  dateLabel = "Due date",
 }: {
-  invoice: Invoice
+  invoice: DocumentLike
   client: Client | undefined
   business: BusinessProfile
+  kind?: "invoice" | "quote"
+  dateLabel?: string
 }) {
   const subtotal = invoiceSubtotal(invoice.items)
   const tax = invoiceTax(invoice.items)
@@ -18,8 +32,12 @@ export default function InvoiceDocument({
     <div id="invoice-print" className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-10 max-w-3xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 pb-8 border-b border-slate-100">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white font-bold">
-            {business.logoInitial}
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white font-bold overflow-hidden">
+            {business.logoDataUrl ? (
+              <img src={business.logoDataUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              business.logoInitial
+            )}
           </div>
           <div>
             <p className="font-semibold text-slate-900">{business.name}</p>
@@ -28,14 +46,18 @@ export default function InvoiceDocument({
           </div>
         </div>
         <div className="text-left sm:text-right">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Invoice</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            {kind === "quote" ? "Quote" : "Invoice"}
+          </h2>
           <p className="text-sm text-slate-500 mt-1">{invoice.number}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 py-8 border-b border-slate-100">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">Billed to</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">
+            {kind === "quote" ? "Prepared for" : "Billed to"}
+          </p>
           {client ? (
             <div className="text-sm text-slate-700">
               <p className="font-medium text-slate-900">{client.name}</p>
@@ -49,7 +71,7 @@ export default function InvoiceDocument({
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5">Issue date</p>
           <p className="text-sm text-slate-700">{formatDate(invoice.issueDate)}</p>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5 mt-3">Due date</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-1.5 mt-3">{dateLabel}</p>
           <p className="text-sm text-slate-700">{formatDate(invoice.dueDate)}</p>
         </div>
         <div>
@@ -91,7 +113,7 @@ export default function InvoiceDocument({
               <span>{formatCurrency(subtotal, business.currency)}</span>
             </div>
             <div className="flex justify-between text-slate-500">
-              <span>Tax</span>
+              <span>{business.taxLabel || "Tax"}</span>
               <span>{formatCurrency(tax, business.currency)}</span>
             </div>
             {invoice.discount > 0 && (
