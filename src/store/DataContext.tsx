@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import type { BusinessProfile, Client, DocumentTemplates, Invoice, InvoiceStatus, LineItem, Product, Quote, QuoteStatus } from "../types"
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient"
+import { useAuth } from "./AuthContext"
 import { defaultDocumentTemplates, emptyBusinessProfile } from "../lib/defaults"
 import { DEFAULT_INVOICE_TEMPLATE, DEFAULT_QUOTE_TEMPLATE } from "../lib/documentTemplates"
 import { sanitizeHtml } from "../lib/sanitizeHtml"
@@ -68,6 +69,9 @@ export function makeBlankLineItem(): LineItem {
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  const userId = user?.id ?? null
+
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<Client[]>([])
   const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -77,21 +81,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [templates, setTemplates] = useState<DocumentTemplates>(defaultDocumentTemplates)
 
   useEffect(() => {
-    if (!isSupabaseConfigured) {
+    // Reset to a clean slate whenever the signed-in user changes (including
+    // signing out) so one account's data never lingers for another.
+    setClients([])
+    setInvoices([])
+    setQuotes([])
+    setProducts([])
+    setBusiness(emptyBusinessProfile)
+    setTemplates(defaultDocumentTemplates)
+
+    if (!isSupabaseConfigured || !userId) {
       setLoading(false)
       return
     }
 
+    setLoading(true)
     let cancelled = false
 
     async function loadAll() {
+      const uid = userId as string
       const [clientsRes, productsRes, invoicesRes, quotesRes, businessRes, templatesRes] = await Promise.allSettled([
-        supabase.from("clients").select("*").order("created_at", { ascending: false }),
-        supabase.from("products").select("*").order("created_at", { ascending: false }),
-        supabase.from("invoices").select("*").order("created_at", { ascending: false }),
-        supabase.from("quotes").select("*").order("created_at", { ascending: false }),
-        supabase.from("business_profile").select("*").eq("id", 1).maybeSingle(),
-        supabase.from("document_templates").select("*"),
+        supabase.from("clients").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("products").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("invoices").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("quotes").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
+        supabase.from("business_profile").select("*").eq("user_id", uid).maybeSingle(),
+        supabase.from("document_templates").select("*").eq("user_id", uid),
       ])
 
       if (cancelled) return
@@ -129,7 +144,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [userId])
 
   function nextInvoiceNumber() {
     const nums = invoices
@@ -152,7 +167,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setClients((prev) => [newClient, ...prev])
     supabase
       .from("clients")
-      .insert({ id: newClient.id, ...clientToRow(client), created_at: newClient.createdAt })
+      .insert({ id: newClient.id, ...clientToRow(client), created_at: newClient.createdAt, user_id: userId })
       .then(({ error }) => error && logSupabaseError("addClient", error))
     return newClient
   }
@@ -179,7 +194,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     })
     supabase
       .from("invoices")
-      .upsert(invoiceToRow(invoice))
+      .upsert({ ...invoiceToRow(invoice), user_id: userId })
       .then(({ error }) => error && logSupabaseError("saveInvoice", error))
   }
 
@@ -229,7 +244,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setInvoices((prev) => [copy, ...prev])
     supabase
       .from("invoices")
-      .insert(invoiceToRow(copy))
+      .insert({ ...invoiceToRow(copy), user_id: userId })
       .then(({ error }) => error && logSupabaseError("duplicateInvoice", error))
     return copy
   }
@@ -274,7 +289,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     })
     supabase
       .from("quotes")
-      .upsert(quoteToRow(quote))
+      .upsert({ ...quoteToRow(quote), user_id: userId })
       .then(({ error }) => error && logSupabaseError("saveQuote", error))
   }
 
@@ -323,7 +338,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setQuotes((prev) => [copy, ...prev])
     supabase
       .from("quotes")
-      .insert(quoteToRow(copy))
+      .insert({ ...quoteToRow(copy), user_id: userId })
       .then(({ error }) => error && logSupabaseError("duplicateQuote", error))
     return copy
   }
@@ -354,7 +369,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     supabase
       .from("invoices")
-      .insert(invoiceToRow(invoice))
+      .insert({ ...invoiceToRow(invoice), user_id: userId })
       .then(({ error }) => error && logSupabaseError("convertQuoteToInvoice:insert", error))
     supabase
       .from("quotes")
@@ -389,7 +404,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setProducts((prev) => [newProduct, ...prev])
     supabase
       .from("products")
-      .insert({ id: newProduct.id, ...productToRow(product) })
+      .insert({ id: newProduct.id, ...productToRow(product), user_id: userId })
       .then(({ error }) => error && logSupabaseError("addProduct", error))
     return newProduct
   }
@@ -417,9 +432,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   function updateBusiness(patch: Partial<BusinessProfile>) {
     const next = { ...business, ...patch }
     setBusiness(next)
+    if (!userId) return
     supabase
       .from("business_profile")
-      .upsert(businessToRow(next))
+      .upsert({ ...businessToRow(next), user_id: userId }, { onConflict: "user_id" })
       .then(({ error }) => error && logSupabaseError("updateBusiness", error))
   }
 
@@ -430,9 +446,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   function saveTemplate(type: "invoice" | "quote", html: string) {
     const clean = sanitizeHtml(html)
     setTemplates((prev) => ({ ...prev, [type === "invoice" ? "invoiceHtml" : "quoteHtml"]: clean }))
+    if (!userId) return
     supabase
       .from("document_templates")
-      .upsert({ type, html: clean })
+      .upsert({ type, html: clean, user_id: userId }, { onConflict: "user_id,type" })
       .then(({ error }) => error && logSupabaseError("saveTemplate", error))
   }
 

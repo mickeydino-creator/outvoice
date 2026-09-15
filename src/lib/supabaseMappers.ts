@@ -149,7 +149,6 @@ export function businessFromRow(row: any): BusinessProfile {
 
 export function businessToRow(business: BusinessProfile) {
   return {
-    id: 1,
     name: business.name,
     business_type: business.businessType,
     country: business.country,

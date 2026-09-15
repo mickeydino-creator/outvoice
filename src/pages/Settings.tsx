@@ -4,6 +4,7 @@ import PageHeader from "../components/PageHeader"
 import { useData } from "../store/DataContext"
 import { useToast } from "../store/ToastContext"
 import { useTutorial } from "../store/TutorialContext"
+import { useAuth } from "../store/AuthContext"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { renderInvoiceTemplate, renderQuoteTemplate } from "../lib/documentTemplates"
 import { sanitizeHtml } from "../lib/sanitizeHtml"
@@ -311,10 +312,22 @@ function EmailTab() {
 }
 
 function AccountTab() {
-  const { business, updateBusiness } = useData()
+  const { updateBusiness } = useData()
+  const { user, signOut, resetPassword } = useAuth()
   const { showToast } = useToast()
   const { start: startTutorial } = useTutorial()
   const navigate = useNavigate()
+
+  async function handleSendResetLink() {
+    if (!user?.email) return
+    const { error } = await resetPassword(user.email)
+    showToast(error ?? "Password reset link sent", error ? "error" : "info")
+  }
+
+  async function handleSignOut() {
+    await signOut()
+    navigate("/")
+  }
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -322,13 +335,17 @@ function AccountTab() {
         <h3 className="text-sm font-semibold text-slate-800 mb-4">Account</h3>
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between">
+            <dt className="text-slate-500">Full name</dt>
+            <dd className="text-slate-800 font-medium">{user?.user_metadata?.full_name ?? "—"}</dd>
+          </div>
+          <div className="flex justify-between">
             <dt className="text-slate-500">Login email</dt>
-            <dd className="text-slate-800 font-medium">{business.email}</dd>
+            <dd className="text-slate-800 font-medium">{user?.email}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-slate-500">Password</dt>
             <dd>
-              <button onClick={() => showToast("Password reset link sent", "info")} className="text-blue-600 font-medium hover:text-blue-700">
+              <button onClick={handleSendResetLink} className="text-blue-600 font-medium hover:text-blue-700">
                 Send reset link
               </button>
             </dd>
@@ -342,6 +359,11 @@ function AccountTab() {
             </dd>
           </div>
         </dl>
+        <div className="mt-4 pt-4 border-t border-slate-100">
+          <Button variant="secondary" onClick={handleSignOut}>
+            Sign out
+          </Button>
+        </div>
       </Card>
 
       <Card className="p-5">

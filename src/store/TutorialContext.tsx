@@ -13,7 +13,7 @@ export interface TutorialStep {
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: "dashboard",
-    path: "/",
+    path: "/dashboard",
     target: "dashboard-overview",
     title: "Start here",
     description: "Your dashboard gives you a quick overview of your business.",
@@ -21,7 +21,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     id: "add-client",
-    path: "/",
+    path: "/dashboard",
     target: "action-add-client",
     title: "Add your first client",
     description: "Save your customer's details so you can quickly create invoices and quotes.",
@@ -29,7 +29,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     id: "create-quote",
-    path: "/",
+    path: "/dashboard",
     target: "action-create-quote",
     title: "Create a quote",
     description: "Create a professional quote and send it to your client.",
@@ -37,7 +37,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     id: "create-invoice",
-    path: "/",
+    path: "/dashboard",
     target: "action-create-invoice",
     title: "Create an invoice",
     description: "Turn your work into a professional invoice.",

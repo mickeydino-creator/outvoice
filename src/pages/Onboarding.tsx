@@ -54,7 +54,7 @@ export default function Onboarding() {
     if (!hasSeenTutorial) {
       startTutorial()
     } else {
-      navigate("/")
+      navigate("/dashboard")
     }
   }
 

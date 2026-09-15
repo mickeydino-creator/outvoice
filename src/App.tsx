@@ -1,7 +1,11 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom"
 import Layout from "./components/Layout"
 import { useData } from "./store/DataContext"
+import { useAuth } from "./store/AuthContext"
 import { isSupabaseConfigured } from "./lib/supabaseClient"
+import LandingPage from "./pages/LandingPage"
+import SignUp from "./pages/SignUp"
+import SignIn from "./pages/SignIn"
 import Dashboard from "./pages/Dashboard"
 import Invoices from "./pages/Invoices"
 import InvoiceEditor from "./pages/InvoiceEditor"
@@ -16,6 +20,20 @@ import Payments from "./pages/Payments"
 import Reports from "./pages/Reports"
 import Settings from "./pages/Settings"
 import Onboarding from "./pages/Onboarding"
+
+function RootRoute() {
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (user) return <Navigate to="/dashboard" replace />
+  return <LandingPage />
+}
+
+function RequireAuth() {
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (!user) return <Navigate to="/" replace />
+  return <Outlet />
+}
 
 function RequireOnboarding() {
   const { business, loading } = useData()
@@ -52,26 +70,34 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route element={<RequireOnboarding />}>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/invoices/new" element={<InvoiceEditor />} />
-          <Route path="/invoices/:id" element={<InvoiceView />} />
-          <Route path="/invoices/:id/edit" element={<InvoiceEditor />} />
-          <Route path="/quotes" element={<Quotes />} />
-          <Route path="/quotes/new" element={<QuoteEditor />} />
-          <Route path="/quotes/:id" element={<QuoteView />} />
-          <Route path="/quotes/:id/edit" element={<QuoteEditor />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/:id" element={<ClientDetail />} />
-          <Route path="/products" element={<ProductsServices />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
+      <Route path="/" element={<RootRoute />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/login" element={<SignIn />} />
+
+      <Route element={<RequireAuth />}>
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route element={<RequireOnboarding />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/invoices" element={<Invoices />} />
+            <Route path="/invoices/new" element={<InvoiceEditor />} />
+            <Route path="/invoices/:id" element={<InvoiceView />} />
+            <Route path="/invoices/:id/edit" element={<InvoiceEditor />} />
+            <Route path="/quotes" element={<Quotes />} />
+            <Route path="/quotes/new" element={<QuoteEditor />} />
+            <Route path="/quotes/:id" element={<QuoteView />} />
+            <Route path="/quotes/:id/edit" element={<QuoteEditor />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/clients/:id" element={<ClientDetail />} />
+            <Route path="/products" element={<ProductsServices />} />
+            <Route path="/payments" element={<Payments />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
         </Route>
       </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

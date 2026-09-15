@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import { useData } from "../store/DataContext"
+import { useAuth } from "../store/AuthContext"
 
 const navItems = [
-  { to: "/", label: "Dashboard", icon: DashboardIcon, end: true },
+  { to: "/dashboard", label: "Dashboard", icon: DashboardIcon, end: true },
   { to: "/invoices", label: "Invoices", icon: InvoiceIcon },
   { to: "/quotes", label: "Quotes", icon: QuoteIcon },
   { to: "/clients", label: "Clients", icon: ClientsIcon },
@@ -18,8 +19,14 @@ const mobileMore = navItems.slice(3)
 
 export default function Layout() {
   const { business } = useData()
+  const { signOut } = useAuth()
   const navigate = useNavigate()
   const [moreOpen, setMoreOpen] = useState(false)
+
+  async function handleSignOut() {
+    await signOut()
+    navigate("/")
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 lg:flex">
@@ -68,10 +75,18 @@ export default function Layout() {
               business.logoInitial
             )}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-slate-800">{business.name}</p>
             <p className="truncate text-xs text-slate-500">{business.email}</p>
           </div>
+          <button
+            onClick={handleSignOut}
+            aria-label="Sign out"
+            title="Sign out"
+            className="shrink-0 text-slate-400 hover:text-red-500 transition-colors"
+          >
+            <LogoutIcon />
+          </button>
         </div>
       </aside>
 
@@ -129,6 +144,16 @@ export default function Layout() {
                   <span className="text-center leading-tight">{item.label}</span>
                 </NavLink>
               ))}
+              <button
+                onClick={() => {
+                  setMoreOpen(false)
+                  handleSignOut()
+                }}
+                className="flex flex-col items-center gap-2 rounded-xl px-2 py-4 text-xs font-medium text-red-500 bg-red-50"
+              >
+                <LogoutIcon className="h-5 w-5" />
+                <span className="text-center leading-tight">Sign out</span>
+              </button>
             </div>
           </div>
         </div>
@@ -220,6 +245,16 @@ function MoreIcon({ className }: { className?: string }) {
       <circle cx="5" cy="12" r="1.8" />
       <circle cx="12" cy="12" r="1.8" />
       <circle cx="19" cy="12" r="1.8" />
+    </svg>
+  )
+}
+
+function LogoutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
     </svg>
   )
 }

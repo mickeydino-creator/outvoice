@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { BrowserRouter } from "react-router-dom"
 import "./index.css"
 import App from "./App.tsx"
+import { AuthProvider } from "./store/AuthContext.tsx"
 import { DataProvider } from "./store/DataContext.tsx"
 import { ToastProvider } from "./store/ToastContext.tsx"
 import { TutorialProvider } from "./store/TutorialContext.tsx"
@@ -12,12 +13,14 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
-        <DataProvider>
-          <TutorialProvider>
-            <App />
-            <TutorialOverlay />
-          </TutorialProvider>
-        </DataProvider>
+        <AuthProvider>
+          <DataProvider>
+            <TutorialProvider>
+              <App />
+              <TutorialOverlay />
+            </TutorialProvider>
+          </DataProvider>
+        </AuthProvider>
       </ToastProvider>
     </BrowserRouter>
   </StrictMode>
