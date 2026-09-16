@@ -1,22 +1,25 @@
 import type { BusinessProfile, Client, Invoice, Quote } from "../types"
 import { renderInvoiceTemplate, renderQuoteTemplate } from "./documentTemplates"
-import { htmlToPdfBase64 } from "./pdf"
+import { htmlToPdfOutputs } from "./pdf"
+import { uploadDocumentPdf } from "./documentPdfStorage"
 import { buildDocumentEmail } from "./emailLayout"
 import { sendEmail } from "./email"
 import { formatCurrency, formatDate, invoiceTotal } from "./calc"
 
 // Generates the invoice/quote as a PDF (using the customizable HTML template
-// from Settings -> Document Templates) and emails it as an attachment, with a
-// clean, short email body plus a lightweight visual preview card.
+// from Settings -> Document Templates), emails it as an attachment, and also
+// uploads it to Storage so the email can include a direct "Download PDF" link.
 
 export async function sendInvoiceByEmail(
   invoice: Invoice,
   client: Client,
   business: BusinessProfile,
-  templateHtml: string
+  templateHtml: string,
+  userId: string
 ) {
   const renderedHtml = renderInvoiceTemplate(templateHtml, invoice, client, business)
-  const pdfBase64 = await htmlToPdfBase64(renderedHtml)
+  const { base64, blob } = await htmlToPdfOutputs(renderedHtml)
+  const downloadUrl = await uploadDocumentPdf(userId, "invoice", invoice.id, blob)
   const viewUrl = `${window.location.origin}/invoices/${invoice.id}`
 
   const body = buildDocumentEmail({
@@ -28,11 +31,12 @@ export async function sendInvoiceByEmail(
     total: formatCurrency(invoiceTotal(invoice), business.currency),
     dueDate: formatDate(invoice.dueDate),
     viewUrl,
+    downloadUrl: downloadUrl ?? undefined,
   })
 
   const subject = `Invoice #${invoice.number} from ${business.name}`
   await sendEmail(client.email, subject, body, [
-    { filename: `Invoice-${invoice.number}.pdf`, content: pdfBase64 },
+    { filename: `Invoice-${invoice.number}.pdf`, content: base64 },
   ])
 }
 
@@ -40,10 +44,12 @@ export async function sendQuoteByEmail(
   quote: Quote,
   client: Client,
   business: BusinessProfile,
-  templateHtml: string
+  templateHtml: string,
+  userId: string
 ) {
   const renderedHtml = renderQuoteTemplate(templateHtml, quote, client, business)
-  const pdfBase64 = await htmlToPdfBase64(renderedHtml)
+  const { base64, blob } = await htmlToPdfOutputs(renderedHtml)
+  const downloadUrl = await uploadDocumentPdf(userId, "quote", quote.id, blob)
   const viewUrl = `${window.location.origin}/quotes/${quote.id}`
 
   const body = buildDocumentEmail({
@@ -55,10 +61,11 @@ export async function sendQuoteByEmail(
     total: formatCurrency(invoiceTotal(quote), business.currency),
     dueDate: formatDate(quote.expiryDate),
     viewUrl,
+    downloadUrl: downloadUrl ?? undefined,
   })
 
   const subject = `Quote #${quote.number} from ${business.name}`
   await sendEmail(client.email, subject, body, [
-    { filename: `Quote-${quote.number}.pdf`, content: pdfBase64 },
+    { filename: `Quote-${quote.number}.pdf`, content: base64 },
   ])
 }

@@ -1,18 +1,23 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useData } from "../store/DataContext"
+import { useAuth } from "../store/AuthContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, QuoteStatusBadge } from "../components/ui"
 import InvoiceDocument from "../components/InvoiceDocument"
 import { sendQuoteByEmail } from "../lib/documentEmail"
+import { renderQuoteTemplate } from "../lib/documentTemplates"
+import { downloadHtmlAsPdf } from "../lib/pdf"
 
 export default function QuoteView() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { quotes, getClient, business, templates, markQuoteStatus, duplicateQuote, deleteQuote, convertQuoteToInvoice } = useData()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   const quote = quotes.find((q) => q.id === id)
 
@@ -37,7 +42,7 @@ export default function QuoteView() {
     }
     setSending(true)
     try {
-      await sendQuoteByEmail(quote, client, business, templates.quoteHtml)
+      await sendQuoteByEmail(quote, client, business, templates.quoteHtml, user!.id)
       markQuoteStatus(quote.id, "sent")
       showToast(`Quote ${quote.number} sent to ${client.email}`)
     } catch (err) {
@@ -77,9 +82,17 @@ export default function QuoteView() {
     }
   }
 
-  function handleDownload() {
-    showToast("Preparing PDF...", "info")
-    setTimeout(() => window.print(), 300)
+  async function handleDownload() {
+    if (!quote) return
+    setDownloading(true)
+    try {
+      const html = renderQuoteTemplate(templates.quoteHtml, quote, client, business)
+      await downloadHtmlAsPdf(html, `Quote-${quote.number}.pdf`)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to generate PDF", "error")
+    } finally {
+      setDownloading(false)
+    }
   }
 
   function handleDelete() {
@@ -107,8 +120,8 @@ export default function QuoteView() {
             <Button variant="secondary" onClick={handleDuplicate}>
               Duplicate
             </Button>
-            <Button variant="secondary" onClick={handleDownload}>
-              Download PDF
+            <Button variant="secondary" onClick={handleDownload} disabled={downloading}>
+              {downloading ? "Preparing..." : "Download PDF"}
             </Button>
             {quote.status === "draft" && (
               <Button variant="primary" onClick={handleSend} disabled={sending}>

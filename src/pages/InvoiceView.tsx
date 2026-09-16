@@ -1,19 +1,24 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useData } from "../store/DataContext"
+import { useAuth } from "../store/AuthContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, StatusBadge } from "../components/ui"
 import InvoiceDocument from "../components/InvoiceDocument"
 import { effectiveStatus } from "../lib/calc"
 import { sendInvoiceByEmail } from "../lib/documentEmail"
+import { renderInvoiceTemplate } from "../lib/documentTemplates"
+import { downloadHtmlAsPdf } from "../lib/pdf"
 
 export default function InvoiceView() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { invoices, getClient, business, templates, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   const invoice = invoices.find((inv) => inv.id === id)
 
@@ -39,7 +44,7 @@ export default function InvoiceView() {
     }
     setSending(true)
     try {
-      await sendInvoiceByEmail(invoice, client, business, templates.invoiceHtml)
+      await sendInvoiceByEmail(invoice, client, business, templates.invoiceHtml, user!.id)
       markInvoiceStatus(invoice.id, "sent")
       showToast(`Invoice ${invoice.number} sent to ${client.email}`)
     } catch (err) {
@@ -64,9 +69,17 @@ export default function InvoiceView() {
     }
   }
 
-  function handleDownload() {
-    showToast("Preparing PDF...", "info")
-    setTimeout(() => window.print(), 300)
+  async function handleDownload() {
+    if (!invoice) return
+    setDownloading(true)
+    try {
+      const html = renderInvoiceTemplate(templates.invoiceHtml, invoice, client, business)
+      await downloadHtmlAsPdf(html, `Invoice-${invoice.number}.pdf`)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to generate PDF", "error")
+    } finally {
+      setDownloading(false)
+    }
   }
 
   function handleDelete() {
@@ -92,8 +105,8 @@ export default function InvoiceView() {
             <Button variant="secondary" onClick={handleDuplicate}>
               Duplicate
             </Button>
-            <Button variant="secondary" onClick={handleDownload}>
-              Download PDF
+            <Button variant="secondary" onClick={handleDownload} disabled={downloading}>
+              {downloading ? "Preparing..." : "Download PDF"}
             </Button>
             {status === "draft" && (
               <Button variant="primary" onClick={handleSend} disabled={sending}>

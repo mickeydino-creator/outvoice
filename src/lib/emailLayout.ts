@@ -11,6 +11,7 @@ interface EmailPreviewParams {
   total: string
   dueDate: string
   viewUrl: string
+  downloadUrl?: string
 }
 
 function escapeHtml(value: string) {
@@ -26,6 +27,7 @@ export function buildDocumentEmail({
   total,
   dueDate,
   viewUrl,
+  downloadUrl,
 }: EmailPreviewParams) {
   const label = kind === "invoice" ? "Invoice" : "Quote"
   const dueLabel = kind === "invoice" ? "Due date" : "Valid until"
@@ -78,6 +80,11 @@ export function buildDocumentEmail({
             <tr>
               <td align="center">
                 <a href="${viewUrl}" style="display:inline-block;background:#2563EB;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 20px;border-radius:10px;">View ${label}</a>
+                ${
+                  downloadUrl
+                    ? `<a href="${downloadUrl}" style="display:inline-block;margin-left:8px;background:#FFFFFF;color:#2563EB;text-decoration:none;font-size:14px;font-weight:600;padding:10px 20px;border-radius:10px;border:1px solid #E2E8F0;">Download PDF</a>`
+                    : ""
+                }
               </td>
             </tr>
           </table>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useData, makeBlankLineItem } from "../store/DataContext"
+import { useAuth } from "../store/AuthContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
@@ -13,6 +14,7 @@ export default function InvoiceEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { invoices, clients, products, business, templates, saveInvoice, createBlankInvoice, getClient } = useData()
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
 
@@ -86,7 +88,7 @@ export default function InvoiceEditor() {
     }
     setSending(true)
     try {
-      await sendInvoiceByEmail(invoice, client, business, templates.invoiceHtml)
+      await sendInvoiceByEmail(invoice, client, business, templates.invoiceHtml, user!.id)
       handleSave("sent", "Invoice sent to client")
       navigate(`/invoices/${invoice.id}`)
     } catch (err) {
