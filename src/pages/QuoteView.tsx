@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useData } from "../store/DataContext"
-import { useAuth } from "../store/AuthContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, QuoteStatusBadge } from "../components/ui"
@@ -15,7 +14,6 @@ export default function QuoteView() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { quotes, getClient, business, templates, markQuoteStatus, duplicateQuote, deleteQuote, convertQuoteToInvoice } = useData()
-  const { user } = useAuth()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
   const [downloading, setDownloading] = useState(false)
@@ -43,7 +41,7 @@ export default function QuoteView() {
     }
     setSending(true)
     try {
-      await sendQuoteByEmail(quote, client, business, templates.quoteHtml, user!.id)
+      await sendQuoteByEmail(quote, client, business)
       markQuoteStatus(quote.id, "sent")
       showToast(`Quote ${quote.number} sent to ${client.email}`)
     } catch (err) {

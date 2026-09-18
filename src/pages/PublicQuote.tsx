@@ -4,6 +4,8 @@ import InvoiceDocument from "../components/InvoiceDocument"
 import { Button } from "../components/ui"
 import { approvePublicQuote, declinePublicQuote, fetchPublicQuote, type PublicQuoteData } from "../lib/publicQuote"
 import { formatDate } from "../lib/calc"
+import { DEFAULT_QUOTE_TEMPLATE, renderQuoteTemplate } from "../lib/documentTemplates"
+import { downloadHtmlAsPdf } from "../lib/pdf"
 
 type ViewState = "loading" | "ready" | "not-found" | "error"
 
@@ -14,6 +16,7 @@ export default function PublicQuote() {
   const [errorMessage, setErrorMessage] = useState("")
   const [responding, setResponding] = useState<"approve" | "decline" | null>(null)
   const [confirmDecline, setConfirmDecline] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (!id) {
@@ -98,12 +101,29 @@ export default function PublicQuote() {
 
   const { quote, client, business } = data
 
+  async function handleDownload() {
+    setDownloading(true)
+    try {
+      const html = renderQuoteTemplate(data!.templateHtml ?? DEFAULT_QUOTE_TEMPLATE, data!.quote, data!.client, data!.business)
+      await downloadHtmlAsPdf(html, `Quote-${data!.quote.number}.pdf`)
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to generate PDF")
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   return (
     <PublicShell>
       <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
-        <div className="mb-6 text-center sm:text-left">
-          <p className="text-xs font-medium uppercase tracking-wide text-blue-600">Quote from {business.name || "your service provider"}</p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-900">Quote {quote.number}</h1>
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 text-center sm:text-left">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-blue-600">Quote from {business.name || "your service provider"}</p>
+            <h1 className="mt-1 text-2xl font-semibold text-slate-900">Quote {quote.number}</h1>
+          </div>
+          <Button variant="secondary" className="w-full sm:w-auto justify-center" onClick={handleDownload} disabled={downloading}>
+            {downloading ? "Preparing..." : "Download PDF"}
+          </Button>
         </div>
 
         {quote.status === "sent" && (

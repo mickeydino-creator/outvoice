@@ -7,6 +7,7 @@ export interface PublicQuoteData {
   quote: Quote
   client?: Client
   business: BusinessProfile
+  templateHtml?: string
 }
 
 async function invokePublicQuote(action: "get" | "approve" | "decline", quoteId: string): Promise<PublicQuoteData> {
@@ -24,6 +25,7 @@ async function invokePublicQuote(action: "get" | "approve" | "decline", quoteId:
     quote: quoteFromRow(data.quote),
     client: data.client ? clientFromRow(data.client) : undefined,
     business: businessFromRow(data.business ?? {}),
+    templateHtml: data.templateHtml ?? undefined,
   }
 }
 

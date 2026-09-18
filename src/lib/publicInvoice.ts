@@ -7,6 +7,7 @@ export interface PublicInvoiceData {
   invoice: Invoice
   client?: Client
   business: BusinessProfile
+  templateHtml?: string
 }
 
 export async function fetchPublicInvoice(invoiceId: string): Promise<PublicInvoiceData> {
@@ -24,5 +25,6 @@ export async function fetchPublicInvoice(invoiceId: string): Promise<PublicInvoi
     invoice: invoiceFromRow(data.invoice),
     client: data.client ? clientFromRow(data.client) : undefined,
     business: businessFromRow(data.business ?? {}),
+    templateHtml: data.templateHtml ?? undefined,
   }
 }

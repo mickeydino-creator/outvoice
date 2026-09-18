@@ -54,10 +54,13 @@ Deno.serve(async (req: Request) => {
   if (invoiceError) return json({ error: "Failed to load invoice" }, 500)
   if (!invoice) return json({ error: "Invoice not found" }, 404)
 
-  const [{ data: client }, { data: business }] = await Promise.all([
+  const [{ data: client }, { data: business }, { data: templateRow }] = await Promise.all([
     admin.from("clients").select("*").eq("id", invoice.client_id).maybeSingle(),
     admin.from("business_profile").select("*").eq("user_id", invoice.user_id).maybeSingle(),
+    admin.from("document_templates").select("html").eq("user_id", invoice.user_id).eq("type", "invoice").maybeSingle(),
   ])
 
-  return json({ invoice, client, business })
+  // Also hand back the freelancer's custom invoice template (if any) so the
+  // public page can offer a "Download PDF" that matches the same design.
+  return json({ invoice, client, business, templateHtml: templateRow?.html ?? null })
 })

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useData, makeBlankLineItem } from "../store/DataContext"
-import { useAuth } from "../store/AuthContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
@@ -14,8 +13,7 @@ export default function QuoteEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { quotes, clients, products, business, templates, saveQuote, createBlankQuote, getClient } = useData()
-  const { user } = useAuth()
+  const { quotes, clients, products, business, saveQuote, createBlankQuote, getClient } = useData()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
 
@@ -88,7 +86,7 @@ export default function QuoteEditor() {
     }
     setSending(true)
     try {
-      await sendQuoteByEmail(quote, client, business, templates.quoteHtml, user!.id)
+      await sendQuoteByEmail(quote, client, business)
       handleSave("sent", "Quote sent to client")
       navigate(`/quotes/${quote.id}`)
     } catch (err) {

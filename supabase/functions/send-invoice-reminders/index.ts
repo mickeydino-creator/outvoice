@@ -15,6 +15,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { sendResendEmail } from "../_shared/resend.ts"
+import { renderEmailShell, escapeHtml } from "../_shared/emailTemplate.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -55,10 +56,6 @@ function formatCurrency(amount: number, currency: string) {
   }
 }
 
-function escapeHtml(value: string) {
-  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-}
-
 function invoiceTotal(items: any[], discount: number) {
   const subtotal = (items ?? []).reduce((sum, it) => sum + Number(it.quantity ?? 0) * Number(it.unitPrice ?? 0), 0)
   const tax = (items ?? []).reduce(
@@ -72,13 +69,14 @@ function buildReminderEmail(params: {
   customMessage: string
   clientName: string
   businessName: string
+  businessLogoDataUrl?: string
   invoiceNumber: string
   total: string
   dueDate: string
   isOverdue: boolean
   viewUrl?: string
 }) {
-  const { customMessage, clientName, businessName, invoiceNumber, total, dueDate, isOverdue, viewUrl } = params
+  const { customMessage, clientName, businessName, businessLogoDataUrl, invoiceNumber, total, dueDate, isOverdue, viewUrl } = params
 
   const rendered = customMessage
     ? customMessage
@@ -87,20 +85,24 @@ function buildReminderEmail(params: {
         .replace(/\{\{\s*invoice_number\s*\}\}/gi, invoiceNumber)
         .replace(/\{\{\s*total\s*\}\}/gi, total)
         .replace(/\{\{\s*due_date\s*\}\}/gi, dueDate)
-    : `Hi ${clientName},\n\nThis is a reminder that invoice #${invoiceNumber} for ${total} ${
+    : `Hi ${clientName}, this is a reminder that invoice #${invoiceNumber} for ${total} ${
         isOverdue ? "was due on" : "is due on"
-      } ${dueDate}${isOverdue ? " and is now overdue" : ""}.\n\nThank you,\n${businessName}`
+      } ${dueDate}${isOverdue ? " and is now overdue" : ""}.`
 
   const bodyHtml = escapeHtml(rendered).replace(/\n/g, "<br/>")
 
-  return `<div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; color: #0F172A;">
-    <p style="font-size:15px;line-height:1.6;">${bodyHtml}</p>
-    ${
-      viewUrl
-        ? `<p style="margin-top:20px;"><a href="${viewUrl}" style="display:inline-block;background:#2563EB;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 20px;border-radius:10px;">View invoice</a></p>`
-        : ""
-    }
-  </div>`
+  return renderEmailShell({
+    businessName,
+    businessLogoDataUrl,
+    eyebrow: "Payment reminder",
+    heading: `Invoice #${invoiceNumber}`,
+    bodyHtml: `<p style="margin:0;">${bodyHtml}</p>`,
+    infoRows: [
+      { label: isOverdue ? "Was due" : "Due date", value: dueDate },
+      { label: "Total", value: total, emphasis: true },
+    ],
+    primaryButton: viewUrl ? { label: "View invoice", url: viewUrl } : undefined,
+  })
 }
 
 Deno.serve(async (req: Request) => {
@@ -204,11 +206,13 @@ Deno.serve(async (req: Request) => {
         customMessage: settings.message ?? "",
         clientName: client.name ?? "there",
         businessName: business?.name ?? "Your service provider",
+        businessLogoDataUrl: business?.logo_data_url ?? undefined,
         invoiceNumber: invoice.number,
         total: formatCurrency(total, business?.currency ?? "USD"),
         dueDate: dueKey,
         isOverdue: diff < 0,
-        viewUrl: APP_URL ? `${APP_URL}/invoices/${invoice.id}` : undefined,
+        // Public link (no login required) — the client has no account.
+        viewUrl: APP_URL ? `${APP_URL}/i/${invoice.id}` : undefined,
       })
 
       const subject =

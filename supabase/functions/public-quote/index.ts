@@ -11,6 +11,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import { sendResendEmail } from "../_shared/resend.ts"
+import { renderEmailShell, escapeHtml } from "../_shared/emailTemplate.ts"
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -28,10 +29,6 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   })
-}
-
-function escapeHtml(value: string) {
-  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
 Deno.serve(async (req: Request) => {
@@ -72,7 +69,16 @@ Deno.serve(async (req: Request) => {
   ])
 
   if (action === "get") {
-    return json({ quote, client, business })
+    // Also hand back the freelancer's custom quote template (if any) so the
+    // public page can offer a "Download PDF" that matches the same design.
+    const { data: templateRow } = await admin
+      .from("document_templates")
+      .select("html")
+      .eq("user_id", quote.user_id)
+      .eq("type", "quote")
+      .maybeSingle()
+
+    return json({ quote, client, business, templateHtml: templateRow?.html ?? null })
   }
 
   // approve / decline
@@ -102,22 +108,18 @@ Deno.serve(async (req: Request) => {
   if (RESEND_API_KEY && business?.email) {
     const verb = newStatus === "accepted" ? "approved" : "declined"
     const quoteUrl = APP_URL ? `${APP_URL}/quotes/${quoteId}` : undefined
-    const html = `<div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; color: #0F172A;">
-      <p style="font-size:15px;line-height:1.6;">Hi ${escapeHtml(business.name || "there")},</p>
-      <p style="font-size:15px;line-height:1.6;">
-        ${escapeHtml(client?.name ?? "Your client")} has <strong>${verb}</strong> quote #${escapeHtml(quote.number)}.
-      </p>
-      ${
-        newStatus === "accepted"
-          ? `<p style="font-size:15px;line-height:1.6;">You can now convert it into an invoice from Invoxa.</p>`
-          : ""
-      }
-      ${
-        quoteUrl
-          ? `<p style="margin-top:20px;"><a href="${quoteUrl}" style="display:inline-block;background:#2563EB;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 20px;border-radius:10px;">View quote</a></p>`
-          : ""
-      }
-    </div>`
+    const clientName = escapeHtml(client?.name ?? "Your client")
+
+    const html = renderEmailShell({
+      businessName: business.name,
+      businessLogoDataUrl: business.logo_data_url ?? undefined,
+      eyebrow: "Quote update",
+      heading: `Quote #${quote.number} was ${verb}`,
+      bodyHtml: `<p style="margin:0;">${clientName} has <strong>${verb}</strong> this quote.${
+        newStatus === "accepted" ? " You can now convert it into an invoice from Invoxa." : ""
+      }</p>`,
+      primaryButton: quoteUrl ? { label: "View quote", url: quoteUrl } : undefined,
+    })
 
     await sendResendEmail(RESEND_API_KEY, FROM_EMAIL, {
       to: business.email,
