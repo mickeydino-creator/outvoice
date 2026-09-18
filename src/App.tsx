@@ -7,6 +7,7 @@ import LandingPage from "./pages/LandingPage"
 import SignUp from "./pages/SignUp"
 import SignIn from "./pages/SignIn"
 import PublicQuote from "./pages/PublicQuote"
+import PublicInvoice from "./pages/PublicInvoice"
 import Dashboard from "./pages/Dashboard"
 import Invoices from "./pages/Invoices"
 import InvoiceEditor from "./pages/InvoiceEditor"
@@ -75,6 +76,7 @@ export default function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<SignIn />} />
       <Route path="/q/:id" element={<PublicQuote />} />
+      <Route path="/i/:id" element={<PublicInvoice />} />
 
       <Route element={<RequireAuth />}>
         <Route path="/onboarding" element={<Onboarding />} />

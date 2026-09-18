@@ -12,6 +12,9 @@ interface EmailPreviewParams {
   dueDate: string
   viewUrl: string
   downloadUrl?: string
+  // false when the document isn't attached as a PDF — the intro line reads
+  // "view it online" instead of "please find it attached".
+  attached?: boolean
 }
 
 function escapeHtml(value: string) {
@@ -28,6 +31,7 @@ export function buildDocumentEmail({
   dueDate,
   viewUrl,
   downloadUrl,
+  attached = true,
 }: EmailPreviewParams) {
   const label = kind === "invoice" ? "Invoice" : "Quote"
   const dueLabel = kind === "invoice" ? "Due date" : "Valid until"
@@ -42,7 +46,7 @@ export function buildDocumentEmail({
   return `<div style="font-family: Arial, Helvetica, sans-serif; max-width: 480px; margin: 0 auto; color: #0F172A;">
     <p style="font-size:15px;line-height:1.6;">Hi ${safeClient},</p>
     <p style="font-size:15px;line-height:1.6;">
-      Please find your ${label.toLowerCase()} attached as a PDF.
+      ${attached ? `Please find your ${label.toLowerCase()} attached as a PDF.` : `You can view your ${label.toLowerCase()} online using the link below.`}
     </p>
     <p style="font-size:15px;line-height:1.6;margin-bottom:24px;">
       ${label}: #${safeNumber}<br/>

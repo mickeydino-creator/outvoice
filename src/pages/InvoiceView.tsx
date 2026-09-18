@@ -1,13 +1,12 @@
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useData } from "../store/DataContext"
-import { useAuth } from "../store/AuthContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, StatusBadge } from "../components/ui"
 import InvoiceDocument from "../components/InvoiceDocument"
 import { effectiveStatus } from "../lib/calc"
-import { sendInvoiceByEmail } from "../lib/documentEmail"
+import { sendInvoiceByEmail, sendInvoiceReminder } from "../lib/documentEmail"
 import { renderInvoiceTemplate } from "../lib/documentTemplates"
 import { downloadHtmlAsPdf } from "../lib/pdf"
 
@@ -15,10 +14,10 @@ export default function InvoiceView() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { invoices, quotes, getClient, business, templates, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
-  const { user } = useAuth()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [reminding, setReminding] = useState(false)
 
   const invoice = invoices.find((inv) => inv.id === id)
 
@@ -45,13 +44,26 @@ export default function InvoiceView() {
     }
     setSending(true)
     try {
-      await sendInvoiceByEmail(invoice, client, business, templates.invoiceHtml, user!.id)
+      await sendInvoiceByEmail(invoice, client, business)
       markInvoiceStatus(invoice.id, "sent")
       showToast(`Invoice ${invoice.number} sent to ${client.email}`)
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to send invoice", "error")
     } finally {
       setSending(false)
+    }
+  }
+
+  async function handleRemind() {
+    if (!invoice || !client?.email) return
+    setReminding(true)
+    try {
+      await sendInvoiceReminder(invoice, client, business)
+      showToast(`Reminder sent to ${client.email}`)
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to send reminder", "error")
+    } finally {
+      setReminding(false)
     }
   }
 
@@ -92,6 +104,15 @@ export default function InvoiceView() {
     }
   }
 
+  const publicUrl = `${window.location.origin}/i/${invoice.id}`
+
+  function handleCopyLink() {
+    navigator.clipboard
+      .writeText(publicUrl)
+      .then(() => showToast("Public link copied"))
+      .catch(() => showToast("Couldn't copy link", "error"))
+  }
+
   return (
     <div>
       <PageHeader
@@ -115,9 +136,14 @@ export default function InvoiceView() {
               </Button>
             )}
             {(status === "sent" || status === "overdue") && (
-              <Button variant="primary" onClick={handleMarkPaid}>
-                Mark as paid
-              </Button>
+              <>
+                <Button variant="secondary" onClick={handleRemind} disabled={reminding}>
+                  {reminding ? "Sending..." : "Remind client"}
+                </Button>
+                <Button variant="primary" onClick={handleMarkPaid}>
+                  Mark as paid
+                </Button>
+              </>
             )}
           </>
         }
@@ -131,6 +157,16 @@ export default function InvoiceView() {
               quote {sourceQuote.number}
             </button>
             .
+          </div>
+        )}
+        {status !== "draft" && (
+          <div className="max-w-3xl mx-auto mb-4 flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <p className="flex-1 truncate text-xs text-slate-500">
+              Public link: <span className="text-slate-700">{publicUrl}</span>
+            </p>
+            <Button size="sm" variant="secondary" onClick={handleCopyLink}>
+              Copy link
+            </Button>
           </div>
         )}
         <InvoiceDocument invoice={invoice} client={client} business={business} />
