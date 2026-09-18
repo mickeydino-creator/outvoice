@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import type { BusinessProfile, Client, DocumentTemplates, Invoice, InvoiceStatus, LineItem, Product, Quote, QuoteStatus } from "../types"
+import type { BusinessProfile, Client, DocumentTemplates, Invoice, InvoiceStatus, LineItem, Product, Quote, QuoteStatus, ReminderLogEntry, ReminderSettings } from "../types"
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient"
 import { useAuth } from "./AuthContext"
-import { defaultDocumentTemplates, emptyBusinessProfile } from "../lib/defaults"
+import { defaultDocumentTemplates, defaultReminderSettings, emptyBusinessProfile } from "../lib/defaults"
 import { DEFAULT_INVOICE_TEMPLATE, DEFAULT_QUOTE_TEMPLATE } from "../lib/documentTemplates"
 import { sanitizeHtml } from "../lib/sanitizeHtml"
 import {
@@ -16,6 +16,8 @@ import {
   productToRow,
   quoteFromRow,
   quoteToRow,
+  reminderSettingsFromRow,
+  reminderSettingsToRow,
 } from "../lib/supabaseMappers"
 import { effectiveStatus, invoiceTotal } from "../lib/calc"
 
@@ -51,6 +53,10 @@ interface DataContextValue {
   completeOnboarding: (patch: Partial<BusinessProfile>) => void
   saveTemplate: (type: "invoice" | "quote", html: string) => void
   resetTemplate: (type: "invoice" | "quote") => void
+  reminderSettings: ReminderSettings
+  updateReminderSettings: (patch: Partial<ReminderSettings>) => void
+  reminderLog: ReminderLogEntry[]
+  refreshReminderLog: () => void
 }
 
 const DataContext = createContext<DataContextValue | null>(null)
@@ -79,6 +85,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
   const [business, setBusiness] = useState<BusinessProfile>(emptyBusinessProfile)
   const [templates, setTemplates] = useState<DocumentTemplates>(defaultDocumentTemplates)
+  const [reminderSettings, setReminderSettings] = useState<ReminderSettings>(defaultReminderSettings)
+  const [reminderLog, setReminderLog] = useState<ReminderLogEntry[]>([])
 
   useEffect(() => {
     // Reset to a clean slate whenever the signed-in user changes (including
@@ -89,6 +97,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setProducts([])
     setBusiness(emptyBusinessProfile)
     setTemplates(defaultDocumentTemplates)
+    setReminderSettings(defaultReminderSettings)
+    setReminderLog([])
 
     if (!isSupabaseConfigured || !userId) {
       setLoading(false)
@@ -100,13 +110,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     async function loadAll() {
       const uid = userId as string
-      const [clientsRes, productsRes, invoicesRes, quotesRes, businessRes, templatesRes] = await Promise.allSettled([
+      const [clientsRes, productsRes, invoicesRes, quotesRes, businessRes, templatesRes, reminderSettingsRes, reminderLogRes] = await Promise.allSettled([
         supabase.from("clients").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("products").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("invoices").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("quotes").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("business_profile").select("*").eq("user_id", uid).maybeSingle(),
         supabase.from("document_templates").select("*").eq("user_id", uid),
+        supabase.from("invoice_reminder_settings").select("*").eq("user_id", uid).maybeSingle(),
+        supabase.from("invoice_reminders").select("*").eq("user_id", uid).order("sent_at", { ascending: false }).limit(10),
       ])
 
       if (cancelled) return
@@ -135,6 +147,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
           invoiceHtml: invoiceRow?.html ?? DEFAULT_INVOICE_TEMPLATE,
           quoteHtml: quoteRow?.html ?? DEFAULT_QUOTE_TEMPLATE,
         })
+      }
+
+      if (reminderSettingsRes.status === "rejected" || reminderSettingsRes.value.error) logSupabaseError("load invoice_reminder_settings", reminderSettingsRes.status === "rejected" ? reminderSettingsRes.reason : reminderSettingsRes.value.error)
+      else setReminderSettings(reminderSettingsRes.value.data ? reminderSettingsFromRow(reminderSettingsRes.value.data) : defaultReminderSettings)
+
+      if (reminderLogRes.status === "rejected" || reminderLogRes.value.error) logSupabaseError("load invoice_reminders", reminderLogRes.status === "rejected" ? reminderLogRes.reason : reminderLogRes.value.error)
+      else {
+        const invoiceRows = invoicesRes.status === "fulfilled" ? invoicesRes.value.data ?? [] : []
+        const clientRows = clientsRes.status === "fulfilled" ? clientsRes.value.data ?? [] : []
+        const invoiceById = new Map(invoiceRows.map((r: any) => [r.id, r]))
+        const clientById = new Map(clientRows.map((r: any) => [r.id, r]))
+        setReminderLog(
+          (reminderLogRes.value.data ?? []).map((row: any) => {
+            const invoiceRow = invoiceById.get(row.invoice_id)
+            const clientRow = invoiceRow ? clientById.get(invoiceRow.client_id) : undefined
+            return {
+              id: row.id,
+              invoiceId: row.invoice_id,
+              invoiceNumber: invoiceRow?.number ?? "—",
+              clientName: clientRow?.name ?? "—",
+              reminderKey: row.reminder_key,
+              sentAt: row.sent_at,
+            }
+          })
+        )
       }
 
       setLoading(false)
@@ -361,6 +398,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       paymentTerms: source.paymentTerms,
       status: "draft",
       createdAt: today.toISOString(),
+      quoteId: source.id,
     }
     const updatedQuote: Quote = { ...source, status: "converted", convertedInvoiceId: invoice.id }
 
@@ -458,6 +496,46 @@ export function DataProvider({ children }: { children: ReactNode }) {
     saveTemplate(type, fallback)
   }
 
+  function updateReminderSettings(patch: Partial<ReminderSettings>) {
+    const next = { ...reminderSettings, ...patch }
+    setReminderSettings(next)
+    if (!userId) return
+    supabase
+      .from("invoice_reminder_settings")
+      .upsert({ ...reminderSettingsToRow(next), user_id: userId }, { onConflict: "user_id" })
+      .then(({ error }) => error && logSupabaseError("updateReminderSettings", error))
+  }
+
+  function refreshReminderLog() {
+    if (!userId) return
+    supabase
+      .from("invoice_reminders")
+      .select("*")
+      .eq("user_id", userId)
+      .order("sent_at", { ascending: false })
+      .limit(10)
+      .then(({ data, error }) => {
+        if (error) {
+          logSupabaseError("refreshReminderLog", error)
+          return
+        }
+        setReminderLog(
+          (data ?? []).map((row) => {
+            const invoice = invoices.find((inv) => inv.id === row.invoice_id)
+            const client = invoice ? clients.find((c) => c.id === invoice.clientId) : undefined
+            return {
+              id: row.id,
+              invoiceId: row.invoice_id,
+              invoiceNumber: invoice?.number ?? "—",
+              clientName: client?.name ?? "—",
+              reminderKey: row.reminder_key,
+              sentAt: row.sent_at,
+            }
+          })
+        )
+      })
+  }
+
   const value = useMemo<DataContextValue>(
     () => ({
       loading,
@@ -491,9 +569,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       completeOnboarding,
       saveTemplate,
       resetTemplate,
+      reminderSettings,
+      updateReminderSettings,
+      reminderLog,
+      refreshReminderLog,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, clients, invoices, quotes, products, business, templates]
+    [loading, clients, invoices, quotes, products, business, templates, reminderSettings, reminderLog]
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

@@ -9,6 +9,7 @@ import InvoiceDocument from "../components/InvoiceDocument"
 import { sendQuoteByEmail } from "../lib/documentEmail"
 import { renderQuoteTemplate } from "../lib/documentTemplates"
 import { downloadHtmlAsPdf } from "../lib/pdf"
+import { formatDate } from "../lib/calc"
 
 export default function QuoteView() {
   const { id } = useParams()
@@ -104,6 +105,15 @@ export default function QuoteView() {
     }
   }
 
+  const publicUrl = `${window.location.origin}/q/${quote.id}`
+
+  function handleCopyLink() {
+    navigator.clipboard
+      .writeText(publicUrl)
+      .then(() => showToast("Public link copied"))
+      .catch(() => showToast("Couldn't copy link", "error"))
+  }
+
   return (
     <div>
       <PageHeader
@@ -148,6 +158,29 @@ export default function QuoteView() {
       />
 
       <div className="px-4 lg:px-8 pb-16">
+        {quote.status !== "draft" && (
+          <div className="max-w-3xl mx-auto mb-4 flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <p className="flex-1 truncate text-xs text-slate-500">
+              Public link: <span className="text-slate-700">{publicUrl}</span>
+            </p>
+            <Button size="sm" variant="secondary" onClick={handleCopyLink}>
+              Copy link
+            </Button>
+          </div>
+        )}
+
+        {quote.status === "accepted" && quote.respondedAt && (
+          <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            Client approved this quote on {formatDate(quote.respondedAt)}.
+          </div>
+        )}
+
+        {quote.status === "declined" && quote.respondedAt && (
+          <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            Client rejected this quote on {formatDate(quote.respondedAt)}.
+          </div>
+        )}
+
         {quote.convertedInvoiceId && (
           <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-700">
             This quote was converted to{" "}

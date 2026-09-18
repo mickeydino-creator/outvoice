@@ -46,6 +46,7 @@ const tabs = [
   { key: "invoicing", label: "Invoicing" },
   { key: "email", label: "Email settings" },
   { key: "templates", label: "Document Templates" },
+  { key: "reminders", label: "Reminders" },
   { key: "account", label: "Account" },
   { key: "billing", label: "Plan & billing" },
 ] as const
@@ -79,6 +80,7 @@ export default function Settings() {
         {tab === "invoicing" && <InvoicingTab />}
         {tab === "email" && <EmailTab />}
         {tab === "templates" && <DocumentTemplatesTab />}
+        {tab === "reminders" && <RemindersTab />}
         {tab === "account" && <AccountTab />}
         {tab === "billing" && <BillingTab />}
       </div>
@@ -234,6 +236,22 @@ function InvoicingTab() {
               onChange={(e) => setForm({ ...form, defaultTaxRate: Number(e.target.value) })}
             />
           </div>
+          <div>
+            <Label>Timezone</Label>
+            <Select value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })}>
+              <option value="UTC">UTC</option>
+              <option value="Asia/Jerusalem">Asia/Jerusalem</option>
+              <option value="America/New_York">America/New_York</option>
+              <option value="America/Chicago">America/Chicago</option>
+              <option value="America/Denver">America/Denver</option>
+              <option value="America/Los_Angeles">America/Los_Angeles</option>
+              <option value="Europe/London">Europe/London</option>
+              <option value="Europe/Berlin">Europe/Berlin</option>
+              <option value="Asia/Kolkata">Asia/Kolkata</option>
+              <option value="Australia/Sydney">Australia/Sydney</option>
+            </Select>
+            <p className="mt-1 text-xs text-slate-400">Used to determine due dates for invoice reminders.</p>
+          </div>
         </div>
 
         <div>
@@ -298,8 +316,8 @@ function EmailTab() {
             Use placeholders: {"{client}"}, {"{number}"}, {"{total}"}, {"{dueDate}"}, {"{business}"}
           </p>
         </div>
-        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Automated payment reminders are a Pro feature. Upgrade to send them automatically before and after the due date.
+        <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+          Automated payment reminders can be configured in the Reminders tab.
         </div>
         <div className="flex justify-end">
           <Button type="submit" variant="primary">
@@ -308,6 +326,122 @@ function EmailTab() {
         </div>
       </form>
     </Card>
+  )
+}
+
+function parseDaysList(value: string): number[] {
+  return value
+    .split(",")
+    .map((part) => parseInt(part.trim(), 10))
+    .filter((n) => Number.isFinite(n) && n > 0)
+}
+
+function RemindersTab() {
+  const { reminderSettings, updateReminderSettings, reminderLog } = useData()
+  const { showToast } = useToast()
+  const [form, setForm] = useState(reminderSettings)
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <Card className="p-5">
+        <h3 className="text-sm font-semibold text-slate-800 mb-1">Invoice reminders</h3>
+        <p className="text-sm text-slate-500 mb-4">
+          Automatically email clients about unpaid invoices. Paid invoices are never reminded, and each reminder is
+          only ever sent once.
+        </p>
+        <form
+          className="space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault()
+            updateReminderSettings(form)
+            showToast("Reminder settings saved")
+          }}
+        >
+          <label className="flex items-center gap-2.5 text-sm font-medium text-slate-700">
+            <input
+              type="checkbox"
+              checked={form.enabled}
+              onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
+            />
+            Enable automatic reminders
+          </label>
+
+          <div className={form.enabled ? "space-y-5" : "space-y-5 opacity-50 pointer-events-none"}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Days before due date</Label>
+                <Input
+                  value={form.daysBefore.join(", ")}
+                  onChange={(e) => setForm({ ...form, daysBefore: parseDaysList(e.target.value) })}
+                  placeholder="e.g. 3, 7"
+                />
+                <p className="mt-1 text-xs text-slate-400">Comma-separated number of days. Leave blank for none.</p>
+              </div>
+              <div>
+                <Label>Days after due date (overdue)</Label>
+                <Input
+                  value={form.daysAfter.join(", ")}
+                  onChange={(e) => setForm({ ...form, daysAfter: parseDaysList(e.target.value) })}
+                  placeholder="e.g. 3, 7"
+                />
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2.5 text-sm font-medium text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.onDueDate}
+                onChange={(e) => setForm({ ...form, onDueDate: e.target.checked })}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-400"
+              />
+              Send a reminder on the due date
+            </label>
+
+            <div>
+              <Label>Custom message (optional)</Label>
+              <Textarea
+                rows={4}
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                placeholder="Leave blank to use the default reminder message."
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Placeholders: {"{{client_name}}"}, {"{{business_name}}"}, {"{{invoice_number}}"}, {"{{total}}"},{" "}
+                {"{{due_date}}"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button type="submit" variant="primary">
+              Save changes
+            </Button>
+          </div>
+        </form>
+      </Card>
+
+      <Card className="p-5">
+        <h3 className="text-sm font-semibold text-slate-800 mb-4">Recent reminders sent</h3>
+        {reminderLog.length === 0 ? (
+          <p className="text-sm text-slate-400">No reminders have been sent yet.</p>
+        ) : (
+          <ul className="space-y-3 text-sm">
+            {reminderLog.map((entry) => (
+              <li key={entry.id} className="flex items-center justify-between border-b border-slate-50 last:border-0 pb-3 last:pb-0">
+                <div>
+                  <p className="text-slate-700">
+                    {entry.invoiceNumber} — {entry.clientName}
+                  </p>
+                  <p className="text-xs text-slate-400">{entry.reminderKey.replace("_", " ")}</p>
+                </div>
+                <span className="text-xs text-slate-400">{new Date(entry.sentAt).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
   )
 }
 

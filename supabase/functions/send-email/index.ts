@@ -4,7 +4,9 @@
 // secret (set with `supabase secrets set RESEND_API_KEY=...`) and is never sent
 // to or exposed in the frontend.
 //
-// Expects a POST body: { to: string, subject: string, html: string }
+// Expects a POST body: { to: string, subject: string, html: string, attachments?: [...] }
+
+import { sendResendEmail } from "../_shared/resend.ts"
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")
 const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "InvoiceFlow <onboarding@resend.dev>"
@@ -43,31 +45,16 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const resendResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [to],
-        subject,
-        html,
-        ...(Array.isArray(attachments) && attachments.length > 0 ? { attachments } : {}),
-      }),
-    })
+    const result = await sendResendEmail(RESEND_API_KEY, FROM_EMAIL, { to, subject, html, attachments })
 
-    const data = await resendResponse.json()
-
-    if (!resendResponse.ok) {
-      return new Response(JSON.stringify({ error: data.message ?? "Failed to send email" }), {
-        status: resendResponse.status,
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: result.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       })
     }
 
-    return new Response(JSON.stringify({ success: true, id: data.id }), {
+    return new Response(JSON.stringify({ success: true, id: result.id }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })

@@ -1,13 +1,13 @@
 import { useMemo } from "react"
 import { Link } from "react-router-dom"
 import { useData } from "../store/DataContext"
-import { Card, StatusBadge } from "../components/ui"
+import { Card, QuoteStatusBadge, StatusBadge } from "../components/ui"
 import { effectiveStatus, formatCurrency, formatDate, invoiceTotal } from "../lib/calc"
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import PageHeader from "../components/PageHeader"
 
 export default function Dashboard() {
-  const { invoices, clients, business } = useData()
+  const { invoices, quotes, clients, business, reminderLog } = useData()
 
   const stats = useMemo(() => {
     const now = new Date()
@@ -54,6 +54,10 @@ export default function Dashboard() {
   const recentInvoices = [...invoices]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
+
+  const quotesAwaitingApproval = quotes.filter((q) => q.status === "sent")
+  const approvedQuotes = quotes.filter((q) => q.status === "accepted")
+  const overdueInvoices = invoices.filter((inv) => effectiveStatus(inv) === "overdue")
 
   const activity = useMemo(() => {
     const events: { id: string; text: string; time: string }[] = []
@@ -190,6 +194,109 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-800">Quotes awaiting approval</h3>
+              <Link to="/quotes" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                View all
+              </Link>
+            </div>
+            {quotesAwaitingApproval.length === 0 ? (
+              <p className="text-sm text-slate-400">Nothing waiting on a client right now.</p>
+            ) : (
+              <ul className="space-y-3">
+                {quotesAwaitingApproval.slice(0, 5).map((q) => {
+                  const client = clients.find((c) => c.id === q.clientId)
+                  return (
+                    <li key={q.id} className="flex items-center justify-between text-sm">
+                      <Link to={`/quotes/${q.id}`} className="text-slate-700 hover:text-blue-600 truncate pr-2">
+                        {q.number} — {client?.name ?? "—"}
+                      </Link>
+                      <QuoteStatusBadge status={q.status} />
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </Card>
+
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-800">Approved quotes</h3>
+              <Link to="/quotes" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                View all
+              </Link>
+            </div>
+            {approvedQuotes.length === 0 ? (
+              <p className="text-sm text-slate-400">No quotes approved yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {approvedQuotes.slice(0, 5).map((q) => {
+                  const client = clients.find((c) => c.id === q.clientId)
+                  return (
+                    <li key={q.id} className="flex items-center justify-between text-sm">
+                      <Link to={`/quotes/${q.id}`} className="text-slate-700 hover:text-blue-600 truncate pr-2">
+                        {q.number} — {client?.name ?? "—"}
+                      </Link>
+                      <span className="text-xs font-medium text-emerald-600">Ready to convert</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </Card>
+
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-slate-800">Overdue invoices</h3>
+              <Link to="/invoices" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                View all
+              </Link>
+            </div>
+            {overdueInvoices.length === 0 ? (
+              <p className="text-sm text-slate-400">Nothing overdue. Nice work.</p>
+            ) : (
+              <ul className="space-y-3">
+                {overdueInvoices.slice(0, 5).map((inv) => {
+                  const client = clients.find((c) => c.id === inv.clientId)
+                  return (
+                    <li key={inv.id} className="flex items-center justify-between text-sm">
+                      <Link to={`/invoices/${inv.id}`} className="text-slate-700 hover:text-blue-600 truncate pr-2">
+                        {inv.number} — {client?.name ?? "—"}
+                      </Link>
+                      <span className="text-xs font-medium text-red-600">{formatCurrency(invoiceTotal(inv), business.currency)}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </Card>
+        </div>
+
+        <Card className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-slate-800">Recent reminders</h3>
+            <Link to="/settings" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+              Manage reminders
+            </Link>
+          </div>
+          {reminderLog.length === 0 ? (
+            <p className="text-sm text-slate-400">No reminders sent yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {reminderLog.slice(0, 5).map((entry) => (
+                <li key={entry.id} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-700">
+                    {entry.invoiceNumber} — {entry.clientName}
+                  </span>
+                  <span className="text-xs text-slate-400">{formatDate(entry.sentAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
       </div>
     </div>

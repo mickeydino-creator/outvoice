@@ -14,7 +14,7 @@ import { downloadHtmlAsPdf } from "../lib/pdf"
 export default function InvoiceView() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { invoices, getClient, business, templates, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
+  const { invoices, quotes, getClient, business, templates, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
   const { user } = useAuth()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
@@ -35,6 +35,7 @@ export default function InvoiceView() {
 
   const client = getClient(invoice.clientId)
   const status = effectiveStatus(invoice)
+  const sourceQuote = invoice.quoteId ? quotes.find((q) => q.id === invoice.quoteId) : undefined
 
   async function handleSend() {
     if (!invoice) return
@@ -123,6 +124,15 @@ export default function InvoiceView() {
       />
 
       <div className="px-4 lg:px-8 pb-16">
+        {sourceQuote && (
+          <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-700">
+            Created from{" "}
+            <button className="font-medium underline" onClick={() => navigate(`/quotes/${sourceQuote.id}`)}>
+              quote {sourceQuote.number}
+            </button>
+            .
+          </div>
+        )}
         <InvoiceDocument invoice={invoice} client={client} business={business} />
         <div className="max-w-3xl mx-auto mt-4 flex justify-end">
           <button onClick={handleDelete} className="text-xs text-slate-400 hover:text-red-500">

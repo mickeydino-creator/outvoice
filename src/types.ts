@@ -34,6 +34,7 @@ export interface Invoice {
   createdAt: string
   sentAt?: string
   paidAt?: string
+  quoteId?: string
 }
 
 export interface Quote {
@@ -49,7 +50,25 @@ export interface Quote {
   status: QuoteStatus
   createdAt: string
   sentAt?: string
+  respondedAt?: string
   convertedInvoiceId?: string
+}
+
+export interface ReminderSettings {
+  enabled: boolean
+  daysBefore: number[]
+  onDueDate: boolean
+  daysAfter: number[]
+  message: string
+}
+
+export interface ReminderLogEntry {
+  id: string
+  invoiceId: string
+  invoiceNumber: string
+  clientName: string
+  reminderKey: string
+  sentAt: string
 }
 
 export interface Product {
@@ -83,4 +102,5 @@ export interface BusinessProfile {
   emailSubjectTemplate: string
   emailBodyTemplate: string
   onboarded: boolean
+  timezone: string
 }

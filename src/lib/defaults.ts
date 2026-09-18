@@ -1,4 +1,4 @@
-import type { BusinessProfile } from "../types"
+import type { BusinessProfile, ReminderSettings } from "../types"
 import { DEFAULT_INVOICE_TEMPLATE, DEFAULT_QUOTE_TEMPLATE } from "./documentTemplates"
 
 // Blank starting state used only until real data is loaded from Supabase.
@@ -20,9 +20,18 @@ export const emptyBusinessProfile: BusinessProfile = {
   emailSubjectTemplate: "Invoice {{invoice_number}} from {{business_name}}",
   emailBodyTemplate: "",
   onboarded: false,
+  timezone: "UTC",
 }
 
 export const defaultDocumentTemplates = {
   invoiceHtml: DEFAULT_INVOICE_TEMPLATE,
   quoteHtml: DEFAULT_QUOTE_TEMPLATE,
+}
+
+export const defaultReminderSettings: ReminderSettings = {
+  enabled: true,
+  daysBefore: [3],
+  onDueDate: true,
+  daysAfter: [3, 7],
+  message: "",
 }

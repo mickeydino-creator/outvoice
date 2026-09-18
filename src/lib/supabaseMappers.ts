@@ -1,4 +1,4 @@
-import type { BusinessProfile, Client, Invoice, LineItem, Product, Quote } from "../types"
+import type { BusinessProfile, Client, Invoice, LineItem, Product, Quote, ReminderSettings } from "../types"
 
 export function clientFromRow(row: any): Client {
   return {
@@ -68,6 +68,7 @@ export function invoiceFromRow(row: any): Invoice {
     createdAt: row.created_at,
     sentAt: row.sent_at ?? undefined,
     paidAt: row.paid_at ?? undefined,
+    quoteId: row.quote_id ?? undefined,
   }
 }
 
@@ -86,6 +87,7 @@ export function invoiceToRow(invoice: Invoice) {
     created_at: invoice.createdAt,
     sent_at: invoice.sentAt ?? null,
     paid_at: invoice.paidAt ?? null,
+    quote_id: invoice.quoteId ?? null,
   }
 }
 
@@ -103,6 +105,7 @@ export function quoteFromRow(row: any): Quote {
     status: row.status,
     createdAt: row.created_at,
     sentAt: row.sent_at ?? undefined,
+    respondedAt: row.responded_at ?? undefined,
     convertedInvoiceId: row.converted_invoice_id ?? undefined,
   }
 }
@@ -121,6 +124,7 @@ export function quoteToRow(quote: Quote) {
     status: quote.status,
     created_at: quote.createdAt,
     sent_at: quote.sentAt ?? null,
+    responded_at: quote.respondedAt ?? null,
     converted_invoice_id: quote.convertedInvoiceId ?? null,
   }
 }
@@ -144,6 +148,7 @@ export function businessFromRow(row: any): BusinessProfile {
     emailSubjectTemplate: row.email_subject_template ?? "",
     emailBodyTemplate: row.email_body_template ?? "",
     onboarded: Boolean(row.onboarded),
+    timezone: row.timezone ?? "UTC",
   }
 }
 
@@ -166,5 +171,26 @@ export function businessToRow(business: BusinessProfile) {
     email_subject_template: business.emailSubjectTemplate,
     email_body_template: business.emailBodyTemplate,
     onboarded: business.onboarded,
+    timezone: business.timezone,
+  }
+}
+
+export function reminderSettingsFromRow(row: any): ReminderSettings {
+  return {
+    enabled: Boolean(row.enabled),
+    daysBefore: Array.isArray(row.days_before) ? row.days_before.map(Number) : [],
+    onDueDate: Boolean(row.on_due_date),
+    daysAfter: Array.isArray(row.days_after) ? row.days_after.map(Number) : [],
+    message: row.message ?? "",
+  }
+}
+
+export function reminderSettingsToRow(settings: ReminderSettings) {
+  return {
+    enabled: settings.enabled,
+    days_before: settings.daysBefore,
+    on_due_date: settings.onDueDate,
+    days_after: settings.daysAfter,
+    message: settings.message,
   }
 }
