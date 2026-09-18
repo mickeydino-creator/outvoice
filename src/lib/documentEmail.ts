@@ -50,7 +50,9 @@ export async function sendQuoteByEmail(
   const renderedHtml = renderQuoteTemplate(templateHtml, quote, client, business)
   const { base64, blob } = await htmlToPdfOutputs(renderedHtml)
   const downloadUrl = await uploadDocumentPdf(userId, "quote", quote.id, blob)
-  const viewUrl = `${window.location.origin}/quotes/${quote.id}`
+  // Public link (no login required) so the client can actually open it and
+  // approve/reject — not the freelancer-only /quotes/:id route.
+  const viewUrl = `${window.location.origin}/q/${quote.id}`
 
   const body = buildDocumentEmail({
     kind: "quote",

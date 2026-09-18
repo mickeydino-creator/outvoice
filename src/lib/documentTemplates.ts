@@ -10,33 +10,28 @@ interface RenderableDocument {
   notes: string
 }
 
-function itemsTableHtml(items: LineItem[], currency: string) {
-  const rows = items
+// Four columns only (Description / Qty / Rate / Amount) — per-line tax isn't
+// shown here, it's rolled up in the summary card instead. Returns bare <tr>
+// rows so the surrounding template supplies its own <table>/<thead>.
+function itemsRowsHtml(items: LineItem[], currency: string) {
+  return items
     .map(
       (item) => `
         <tr>
-          <td style="padding:8px 0;border-bottom:1px solid #E2E8F0;">${escapeHtml(item.description || "—")}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #E2E8F0;text-align:right;">${item.quantity}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #E2E8F0;text-align:right;">${formatCurrency(item.unitPrice, currency)}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #E2E8F0;text-align:right;">${item.taxRate}%</td>
-          <td style="padding:8px 0;border-bottom:1px solid #E2E8F0;text-align:right;font-weight:600;">${formatCurrency(lineTotal(item), currency)}</td>
+          <td>${escapeHtml(item.description || "—")}</td>
+          <td>${item.quantity}</td>
+          <td>${formatCurrency(item.unitPrice, currency)}</td>
+          <td>${formatCurrency(lineTotal(item), currency)}</td>
         </tr>`
     )
     .join("")
+}
 
-  return `
-    <table style="width:100%;border-collapse:collapse;font-size:14px;">
-      <thead>
-        <tr style="text-align:left;font-size:12px;text-transform:uppercase;color:#64748B;">
-          <th style="padding-bottom:8px;border-bottom:1px solid #E2E8F0;">Description</th>
-          <th style="padding-bottom:8px;border-bottom:1px solid #E2E8F0;text-align:right;">Qty</th>
-          <th style="padding-bottom:8px;border-bottom:1px solid #E2E8F0;text-align:right;">Price</th>
-          <th style="padding-bottom:8px;border-bottom:1px solid #E2E8F0;text-align:right;">Tax</th>
-          <th style="padding-bottom:8px;border-bottom:1px solid #E2E8F0;text-align:right;">Amount</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>`
+function businessLogoHtml(business: BusinessProfile) {
+  if (business.logoDataUrl) {
+    return `<img src="${business.logoDataUrl}" alt="${escapeHtml(business.name)}" class="logo" />`
+  }
+  return `<div class="logo logo-fallback">${escapeHtml(business.logoInitial || business.name.charAt(0) || "?")}</div>`
 }
 
 function escapeHtml(value: string) {
@@ -65,9 +60,7 @@ export function renderInvoiceTemplate(
 
   return applyVariables(html, {
     business_name: escapeHtml(business.name),
-    business_logo: business.logoDataUrl
-      ? `<img src="${business.logoDataUrl}" alt="${escapeHtml(business.name)}" style="height:48px;width:48px;object-fit:cover;border-radius:12px;" />`
-      : "",
+    business_logo: businessLogoHtml(business),
     business_email: escapeHtml(business.email),
     business_address: escapeHtml(business.address).replace(/\n/g, "<br/>"),
     client_name: escapeHtml(client?.name ?? ""),
@@ -77,7 +70,7 @@ export function renderInvoiceTemplate(
     invoice_number: escapeHtml(invoice.number),
     issue_date: formatDate(invoice.issueDate),
     due_date: formatDate(invoice.dueDate),
-    invoice_items: itemsTableHtml(invoice.items, business.currency),
+    invoice_items: itemsRowsHtml(invoice.items, business.currency),
     subtotal: formatCurrency(subtotal, business.currency),
     tax: formatCurrency(tax, business.currency),
     discount: formatCurrency(invoice.discount, business.currency),
@@ -98,9 +91,7 @@ export function renderQuoteTemplate(
 
   return applyVariables(html, {
     business_name: escapeHtml(business.name),
-    business_logo: business.logoDataUrl
-      ? `<img src="${business.logoDataUrl}" alt="${escapeHtml(business.name)}" style="height:48px;width:48px;object-fit:cover;border-radius:12px;" />`
-      : "",
+    business_logo: businessLogoHtml(business),
     business_email: escapeHtml(business.email),
     business_address: escapeHtml(business.address).replace(/\n/g, "<br/>"),
     client_name: escapeHtml(client?.name ?? ""),
@@ -110,7 +101,7 @@ export function renderQuoteTemplate(
     quote_number: escapeHtml(quote.number),
     issue_date: formatDate(quote.issueDate),
     expiry_date: formatDate(quote.expiryDate),
-    quote_items: itemsTableHtml(quote.items, business.currency),
+    quote_items: itemsRowsHtml(quote.items, business.currency),
     subtotal: formatCurrency(subtotal, business.currency),
     tax: formatCurrency(tax, business.currency),
     discount: formatCurrency(quote.discount, business.currency),
@@ -119,96 +110,210 @@ export function renderQuoteTemplate(
   })
 }
 
-export const DEFAULT_INVOICE_TEMPLATE = `<div style="font-family: Inter, Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 32px; color: #0F172A;">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:1px solid #E2E8F0;">
-    <div>
-      {{business_logo}}
-      <p style="font-weight:600;margin:8px 0 0;">{{business_name}}</p>
-      <p style="color:#64748B;font-size:14px;margin:2px 0;">{{business_address}}</p>
-      <p style="color:#64748B;font-size:14px;margin:2px 0;">{{business_email}}</p>
-    </div>
-    <div style="text-align:right;">
-      <h1 style="font-size:24px;margin:0;">Invoice</h1>
-      <p style="color:#64748B;margin:4px 0 0;">{{invoice_number}}</p>
+// Shared look for both documents: a soft hero header, rounded info cards, a
+// bordered items table and a dark summary panel. Kept as inline <style> +
+// classes (not email-safe inline-styles-per-tag) because this HTML is only
+// ever rendered inside a real browser context — html2canvas for the PDF, and
+// an iframe for the Settings preview — never sent as raw email HTML.
+function documentStyles() {
+  return `<style>
+    * { box-sizing: border-box; }
+    .doc-page { margin: 0; padding: 50px 20px; background: #eef1f5; font-family: "Inter", Arial, sans-serif; color: #111827; }
+    .doc { max-width: 900px; margin: auto; background: #fff; border-radius: 28px; overflow: hidden; box-shadow: 0 25px 70px rgba(15, 23, 42, 0.10); }
+    .hero { padding: 44px 48px; background: radial-gradient(circle at 90% 20%, rgba(59,130,246,.15), transparent 30%), linear-gradient(135deg, #f7faff 0%, #ffffff 70%); border-bottom: 1px solid #e8edf3; }
+    .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; }
+    .brand { display: flex; align-items: center; gap: 15px; }
+    .logo { width: 58px; height: 58px; border-radius: 17px; object-fit: contain; background: #fff; border: 1px solid #e8edf3; padding: 7px; box-shadow: 0 8px 20px rgba(0,0,0,.05); }
+    .logo-fallback { display: flex; align-items: center; justify-content: center; background: #2563eb; color: #fff; font-weight: 800; font-size: 20px; padding: 0; }
+    .business-name { font-size: 21px; font-weight: 800; letter-spacing: -.4px; }
+    .business-meta { margin-top: 4px; color: #718096; font-size: 12px; line-height: 1.7; }
+    .doc-heading { text-align: right; }
+    .doc-heading .label { display: inline-flex; align-items: center; padding: 6px 11px; background: #eaf3ff; color: #2563eb; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .4px; margin-bottom: 9px; }
+    .doc-heading h1 { margin: 0; font-size: 43px; line-height: 1; font-weight: 800; letter-spacing: -2px; }
+    .doc-number { margin-top: 8px; color: #8994a3; font-size: 12px; }
+    .content { padding: 38px 48px 48px; }
+    .info { display: grid; grid-template-columns: 1.2fr .8fr; gap: 18px; margin-bottom: 35px; }
+    .card { padding: 21px; background: #fbfcfe; border: 1px solid #e8edf3; border-radius: 18px; }
+    .card-label { margin-bottom: 9px; color: #9aa4b2; font-size: 10px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; }
+    .card-main { font-size: 16px; font-weight: 800; }
+    .card-text { margin-top: 5px; color: #707b8c; font-size: 12px; line-height: 1.8; }
+    .meta { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 35px; overflow: hidden; border: 1px solid #e8edf3; border-radius: 18px; }
+    .meta-item { padding: 18px 20px; border-right: 1px solid #e8edf3; }
+    .meta-item:last-child { border-right: none; }
+    .meta-label { margin-bottom: 5px; color: #9aa4b2; font-size: 10px; font-weight: 800; }
+    .meta-value { font-size: 14px; font-weight: 700; }
+    .items-title { margin-bottom: 12px; font-size: 14px; font-weight: 800; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid #e8edf3; border-radius: 18px; }
+    thead { background: #f7f9fc; }
+    th { padding: 13px 15px; color: #7c8796; font-size: 10px; font-weight: 800; text-align: left; }
+    th:not(:first-child), td:not(:first-child) { text-align: right; }
+    td { padding: 17px 15px; border-top: 1px solid #edf0f4; font-size: 13px; }
+    td:first-child { font-weight: 700; }
+    .bottom { display: grid; grid-template-columns: 1fr 320px; gap: 40px; margin-top: 35px; }
+    .notes { height: fit-content; padding: 20px; background: #f8fafc; border: 1px solid #e8edf3; border-radius: 18px; }
+    .notes-title { margin-bottom: 8px; font-size: 11px; font-weight: 800; }
+    .notes-text { color: #6f7a8a; font-size: 12px; line-height: 1.8; }
+    .summary { padding: 22px; background: #111827; border-radius: 20px; color: #fff; box-shadow: 0 14px 35px rgba(17,24,39,.18); }
+    .summary-row { display: flex; justify-content: space-between; padding: 6px 0; color: #aeb7c5; font-size: 12px; }
+    .summary-row.discount { color: #ff8f8f; }
+    .summary-total { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 14px; padding-top: 17px; border-top: 1px solid rgba(255,255,255,.12); }
+    .total-label { color: #aeb7c5; font-size: 12px; }
+    .total-value { font-size: 29px; font-weight: 800; letter-spacing: -1px; }
+    .footer { display: flex; justify-content: space-between; margin-top: 38px; padding-top: 22px; border-top: 1px solid #edf0f4; color: #9aa4b2; font-size: 10px; }
+    @media (max-width: 650px) {
+      .doc-page { padding: 15px; }
+      .hero, .content { padding: 28px 22px; }
+      .top { flex-direction: column; }
+      .doc-heading { text-align: left; }
+      .info, .bottom { grid-template-columns: 1fr; }
+      .meta { grid-template-columns: 1fr; }
+      .meta-item { border-right: none; border-bottom: 1px solid #e8edf3; }
+      .meta-item:last-child { border-bottom: none; }
+      .footer { flex-direction: column; gap: 8px; }
+    }
+    @media print {
+      .doc-page { padding: 0; background: #fff; }
+      .doc { max-width: none; box-shadow: none; border-radius: 0; }
+    }
+  </style>`
+}
+
+export const DEFAULT_INVOICE_TEMPLATE = `${documentStyles()}
+<div class="doc-page">
+<div class="doc">
+  <div class="hero">
+    <div class="top">
+      <div class="brand">
+        {{business_logo}}
+        <div>
+          <div class="business-name">{{business_name}}</div>
+          <div class="business-meta">{{business_email}}<br>{{business_address}}</div>
+        </div>
+      </div>
+      <div class="doc-heading">
+        <div class="label">INVOICE</div>
+        <h1>Invoice</h1>
+        <div class="doc-number">#{{invoice_number}}</div>
+      </div>
     </div>
   </div>
-
-  <div style="display:flex;gap:24px;padding:24px 0;border-bottom:1px solid #E2E8F0;">
-    <div style="flex:1;">
-      <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Billed to</p>
-      <p style="font-weight:600;margin:0;">{{client_name}}</p>
-      <p style="margin:2px 0;">{{client_company}}</p>
-      <p style="color:#64748B;margin:2px 0;font-size:14px;">{{client_address}}</p>
+  <div class="content">
+    <div class="info">
+      <div class="card">
+        <div class="card-label">Billed To</div>
+        <div class="card-main">{{client_name}}</div>
+        <div class="card-text">{{client_company}}<br>{{client_email}}<br>{{client_address}}</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Payment Status</div>
+        <div class="card-main">Awaiting Payment</div>
+        <div class="card-text">Due {{due_date}}</div>
+      </div>
     </div>
-    <div style="flex:1;">
-      <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Issue date</p>
-      <p style="margin:0 0 12px;">{{issue_date}}</p>
-      <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Due date</p>
-      <p style="margin:0;">{{due_date}}</p>
+    <div class="meta">
+      <div class="meta-item">
+        <div class="meta-label">Invoice Number</div>
+        <div class="meta-value">#{{invoice_number}}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Issue Date</div>
+        <div class="meta-value">{{issue_date}}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Due Date</div>
+        <div class="meta-value">{{due_date}}</div>
+      </div>
     </div>
-  </div>
-
-  <div style="padding:24px 0;">
-    {{invoice_items}}
-    <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-      <table style="width:240px;font-size:14px;">
-        <tr><td style="color:#64748B;padding:4px 0;">Subtotal</td><td style="text-align:right;padding:4px 0;">{{subtotal}}</td></tr>
-        <tr><td style="color:#64748B;padding:4px 0;">Tax</td><td style="text-align:right;padding:4px 0;">{{tax}}</td></tr>
-        <tr><td style="color:#64748B;padding:4px 0;">Discount</td><td style="text-align:right;padding:4px 0;">-{{discount}}</td></tr>
-        <tr><td style="font-weight:700;padding:8px 0 0;border-top:1px solid #E2E8F0;">Total</td><td style="text-align:right;font-weight:700;padding:8px 0 0;border-top:1px solid #E2E8F0;">{{total}}</td></tr>
+    <div class="items">
+      <div class="items-title">Services &amp; Items</div>
+      <table>
+        <thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+        <tbody>{{invoice_items}}</tbody>
       </table>
     </div>
+    <div class="bottom">
+      <div class="notes">
+        <div class="notes-title">Notes &amp; Terms</div>
+        <div class="notes-text">{{notes}}</div>
+      </div>
+      <div class="summary">
+        <div class="summary-row"><span>Subtotal</span><span>{{subtotal}}</span></div>
+        <div class="summary-row"><span>Tax</span><span>{{tax}}</span></div>
+        <div class="summary-row discount"><span>Discount</span><span>-{{discount}}</span></div>
+        <div class="summary-total"><div class="total-label">Total</div><div class="total-value">{{total}}</div></div>
+      </div>
+    </div>
+    <div class="footer"><span>{{business_name}}</span><span>{{business_email}}</span></div>
   </div>
-
-  <div style="padding-top:16px;border-top:1px solid #E2E8F0;">
-    <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Notes</p>
-    <p style="color:#475569;font-size:14px;">{{notes}}</p>
-  </div>
+</div>
 </div>`
 
-export const DEFAULT_QUOTE_TEMPLATE = `<div style="font-family: Inter, Arial, sans-serif; max-width: 640px; margin: 0 auto; padding: 32px; color: #0F172A;">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:1px solid #E2E8F0;">
-    <div>
-      {{business_logo}}
-      <p style="font-weight:600;margin:8px 0 0;">{{business_name}}</p>
-      <p style="color:#64748B;font-size:14px;margin:2px 0;">{{business_address}}</p>
-      <p style="color:#64748B;font-size:14px;margin:2px 0;">{{business_email}}</p>
-    </div>
-    <div style="text-align:right;">
-      <h1 style="font-size:24px;margin:0;">Quote</h1>
-      <p style="color:#64748B;margin:4px 0 0;">{{quote_number}}</p>
-    </div>
-  </div>
-
-  <div style="display:flex;gap:24px;padding:24px 0;border-bottom:1px solid #E2E8F0;">
-    <div style="flex:1;">
-      <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Prepared for</p>
-      <p style="font-weight:600;margin:0;">{{client_name}}</p>
-      <p style="margin:2px 0;">{{client_company}}</p>
-      <p style="color:#64748B;margin:2px 0;font-size:14px;">{{client_address}}</p>
-    </div>
-    <div style="flex:1;">
-      <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Issue date</p>
-      <p style="margin:0 0 12px;">{{issue_date}}</p>
-      <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Valid until</p>
-      <p style="margin:0;">{{expiry_date}}</p>
+export const DEFAULT_QUOTE_TEMPLATE = `${documentStyles()}
+<div class="doc-page">
+<div class="doc">
+  <div class="hero">
+    <div class="top">
+      <div class="brand">
+        {{business_logo}}
+        <div>
+          <div class="business-name">{{business_name}}</div>
+          <div class="business-meta">{{business_email}}<br>{{business_address}}</div>
+        </div>
+      </div>
+      <div class="doc-heading">
+        <div class="label">QUOTE</div>
+        <h1>Quote</h1>
+        <div class="doc-number">#{{quote_number}}</div>
+      </div>
     </div>
   </div>
-
-  <div style="padding:24px 0;">
-    {{quote_items}}
-    <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-      <table style="width:240px;font-size:14px;">
-        <tr><td style="color:#64748B;padding:4px 0;">Subtotal</td><td style="text-align:right;padding:4px 0;">{{subtotal}}</td></tr>
-        <tr><td style="color:#64748B;padding:4px 0;">Tax</td><td style="text-align:right;padding:4px 0;">{{tax}}</td></tr>
-        <tr><td style="color:#64748B;padding:4px 0;">Discount</td><td style="text-align:right;padding:4px 0;">-{{discount}}</td></tr>
-        <tr><td style="font-weight:700;padding:8px 0 0;border-top:1px solid #E2E8F0;">Total</td><td style="text-align:right;font-weight:700;padding:8px 0 0;border-top:1px solid #E2E8F0;">{{total}}</td></tr>
+  <div class="content">
+    <div class="info">
+      <div class="card">
+        <div class="card-label">Prepared For</div>
+        <div class="card-main">{{client_name}}</div>
+        <div class="card-text">{{client_company}}<br>{{client_email}}<br>{{client_address}}</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Quote Status</div>
+        <div class="card-main">Open Proposal</div>
+        <div class="card-text">Valid until {{expiry_date}}</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="meta-item">
+        <div class="meta-label">Quote Number</div>
+        <div class="meta-value">#{{quote_number}}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Issue Date</div>
+        <div class="meta-value">{{issue_date}}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Valid Until</div>
+        <div class="meta-value">{{expiry_date}}</div>
+      </div>
+    </div>
+    <div class="items">
+      <div class="items-title">Services &amp; Items</div>
+      <table>
+        <thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+        <tbody>{{quote_items}}</tbody>
       </table>
     </div>
+    <div class="bottom">
+      <div class="notes">
+        <div class="notes-title">Notes &amp; Terms</div>
+        <div class="notes-text">{{notes}}</div>
+      </div>
+      <div class="summary">
+        <div class="summary-row"><span>Subtotal</span><span>{{subtotal}}</span></div>
+        <div class="summary-row"><span>Tax</span><span>{{tax}}</span></div>
+        <div class="summary-row discount"><span>Discount</span><span>-{{discount}}</span></div>
+        <div class="summary-total"><div class="total-label">Total</div><div class="total-value">{{total}}</div></div>
+      </div>
+    </div>
+    <div class="footer"><span>{{business_name}}</span><span>{{business_email}}</span></div>
   </div>
-
-  <div style="padding-top:16px;border-top:1px solid #E2E8F0;">
-    <p style="font-size:12px;text-transform:uppercase;color:#94A3B8;margin:0 0 4px;">Notes</p>
-    <p style="color:#475569;font-size:14px;">{{notes}}</p>
-  </div>
+</div>
 </div>`

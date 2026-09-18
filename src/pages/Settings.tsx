@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react"
+import { useMemo, useRef, useState, type ChangeEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import PageHeader from "../components/PageHeader"
 import { useData } from "../store/DataContext"
@@ -620,49 +620,14 @@ function DocumentTemplatesTab() {
   const { business, templates, saveTemplate, resetTemplate } = useData()
   const { showToast } = useToast()
   const [docType, setDocType] = useState<"invoice" | "quote">("invoice")
-  const [draft, setDraft] = useState(templates.invoiceHtml)
+  const [editorOpen, setEditorOpen] = useState(false)
 
-  useEffect(() => {
-    setDraft(docType === "invoice" ? templates.invoiceHtml : templates.quoteHtml)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docType])
+  // The single "code" field: its content adapts to whichever document type
+  // is selected above. It's read-only outside the editor modal — editing
+  // only happens through the "Edit code" button.
+  const code = docType === "invoice" ? templates.invoiceHtml : templates.quoteHtml
 
-  const previewHtml = useMemo(() => {
-    const safe = sanitizeHtml(draft)
-    if (docType === "invoice") {
-      return renderInvoiceTemplate(
-        safe,
-        {
-          number: "INV-1001",
-          issueDate: new Date().toISOString(),
-          dueDate: new Date().toISOString(),
-          items: previewItems,
-          discount: 0,
-          notes: "Thank you for your business.",
-        },
-        previewClient,
-        business
-      )
-    }
-    return renderQuoteTemplate(
-      safe,
-      {
-        number: "QUO-2001",
-        issueDate: new Date().toISOString(),
-        expiryDate: new Date().toISOString(),
-        items: previewItems,
-        discount: 0,
-        notes: "This quote is valid for 14 days.",
-      },
-      previewClient,
-      business
-    )
-  }, [draft, docType, business])
-
-  function handleSave() {
-    saveTemplate(docType, draft)
-    showToast(`${docType === "invoice" ? "Invoice" : "Quote"} template saved`)
-  }
+  const previewHtml = useMemo(() => renderPreview(docType, code, business), [docType, code, business])
 
   function handleReset() {
     resetTemplate(docType)
@@ -695,13 +660,15 @@ function DocumentTemplatesTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="p-0 overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-slate-100 text-xs font-medium text-slate-500">Code editor</div>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            spellCheck={false}
-            className="w-full h-[420px] resize-none border-0 bg-slate-900 text-slate-100 font-mono text-xs p-4 outline-none"
-          />
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+            <span className="text-xs font-medium text-slate-500">Code ({docType === "invoice" ? "Invoice" : "Quote"})</span>
+            <Button variant="secondary" onClick={() => setEditorOpen(true)}>
+              Edit code
+            </Button>
+          </div>
+          <pre className="w-full h-[420px] overflow-auto bg-slate-900 text-slate-400 font-mono text-[11px] p-4 m-0 whitespace-pre-wrap">
+            {code}
+          </pre>
         </Card>
 
         <Card className="p-0 overflow-hidden">
@@ -723,15 +690,125 @@ function DocumentTemplatesTab() {
             </code>
           ))}
         </div>
-        <div className="flex gap-2 shrink-0">
-          <Button variant="secondary" onClick={handleReset}>
-            Reset to default
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            Save
-          </Button>
-        </div>
+        <Button variant="secondary" onClick={handleReset}>
+          Reset to default
+        </Button>
       </div>
+
+      {editorOpen && (
+        <TemplateCodeEditorModal
+          docType={docType}
+          initialCode={code}
+          business={business}
+          onClose={() => setEditorOpen(false)}
+          onSave={(html) => {
+            saveTemplate(docType, html)
+            showToast(`${docType === "invoice" ? "Invoice" : "Quote"} template saved`)
+            setEditorOpen(false)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+function renderPreview(docType: "invoice" | "quote", rawHtml: string, business: ReturnType<typeof useData>["business"]) {
+  const safe = sanitizeHtml(rawHtml)
+  if (docType === "invoice") {
+    return renderInvoiceTemplate(
+      safe,
+      {
+        number: "INV-1001",
+        issueDate: new Date().toISOString(),
+        dueDate: new Date().toISOString(),
+        items: previewItems,
+        discount: 0,
+        notes: "Thank you for your business.",
+      },
+      previewClient,
+      business
+    )
+  }
+  return renderQuoteTemplate(
+    safe,
+    {
+      number: "QUO-2001",
+      issueDate: new Date().toISOString(),
+      expiryDate: new Date().toISOString(),
+      items: previewItems,
+      discount: 0,
+      notes: "This quote is valid for 14 days.",
+    },
+    previewClient,
+    business
+  )
+}
+
+// A focused, modern editing surface for the template's HTML/CSS — opened
+// explicitly via "Edit code" rather than being editable inline on the page.
+function TemplateCodeEditorModal({
+  docType,
+  initialCode,
+  business,
+  onClose,
+  onSave,
+}: {
+  docType: "invoice" | "quote"
+  initialCode: string
+  business: ReturnType<typeof useData>["business"]
+  onClose: () => void
+  onSave: (html: string) => void
+}) {
+  const [draft, setDraft] = useState(initialCode)
+  const previewHtml = useMemo(() => renderPreview(docType, draft, business), [docType, draft, business])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 animate-fade-in">
+      <Card className="w-full max-w-6xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">
+              Edit {docType === "invoice" ? "invoice" : "quote"} template code
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">Changes are only applied once you save.</p>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 flex-1 min-h-0">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            spellCheck={false}
+            className="w-full h-[60vh] lg:h-auto resize-none border-0 border-r border-slate-100 bg-slate-900 text-slate-100 font-mono text-xs p-4 outline-none"
+          />
+          <iframe title="Template preview" srcDoc={previewHtml} sandbox="allow-same-origin" className="w-full h-[60vh] lg:h-auto bg-white" />
+        </div>
+
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-t border-slate-100">
+          <div className="flex flex-wrap gap-1.5 max-w-3xl">
+            {TEMPLATE_VARIABLES[docType].map((v) => (
+              <code key={v} className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+                {v}
+              </code>
+            ))}
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={() => onSave(draft)}>
+              Save
+            </Button>
+          </div>
+        </div>
+      </Card>
     </div>
   )
 }
