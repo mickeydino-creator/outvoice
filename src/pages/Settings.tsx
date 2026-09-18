@@ -6,7 +6,7 @@ import { useToast } from "../store/ToastContext"
 import { useTutorial } from "../store/TutorialContext"
 import { useAuth } from "../store/AuthContext"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
-import { renderInvoiceTemplate, renderQuoteTemplate } from "../lib/documentTemplates"
+import { DEFAULT_INVOICE_TEMPLATE, DEFAULT_QUOTE_TEMPLATE, renderInvoiceTemplate, renderQuoteTemplate } from "../lib/documentTemplates"
 import { sanitizeHtml } from "../lib/sanitizeHtml"
 import type { Client } from "../types"
 
@@ -621,13 +621,13 @@ function DocumentTemplatesTab() {
   const { showToast } = useToast()
   const [docType, setDocType] = useState<"invoice" | "quote">("invoice")
   const [editorOpen, setEditorOpen] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   // The single "code" field: its content adapts to whichever document type
-  // is selected above. It's read-only outside the editor modal — editing
-  // only happens through the "Edit code" button.
+  // is selected above. Both the code and its preview stay hidden until you
+  // explicitly open them — nothing renders inline on this page.
   const code = docType === "invoice" ? templates.invoiceHtml : templates.quoteHtml
-
-  const previewHtml = useMemo(() => renderPreview(docType, code, business), [docType, code, business])
+  const isDefault = code === (docType === "invoice" ? DEFAULT_INVOICE_TEMPLATE : DEFAULT_QUOTE_TEMPLATE)
 
   function handleReset() {
     resetTemplate(docType)
@@ -635,7 +635,7 @@ function DocumentTemplatesTab() {
   }
 
   return (
-    <div className="space-y-4 max-w-6xl">
+    <div className="space-y-5 max-w-3xl">
       <div>
         <h3 className="text-sm font-semibold text-slate-800 mb-1">Document Templates</h3>
         <p className="text-sm text-slate-500">
@@ -644,56 +644,55 @@ function DocumentTemplatesTab() {
         </p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
         {(["invoice", "quote"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setDocType(t)}
-            className={`rounded-lg px-3.5 py-2 text-sm font-medium border transition-colors ${
-              docType === t ? "bg-blue-50 border-blue-200 text-blue-700" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              docType === t ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            {t === "invoice" ? "Invoice HTML" : "Quote HTML"}
+            {t === "invoice" ? "Invoice" : "Quote"}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="p-0 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-            <span className="text-xs font-medium text-slate-500">Code ({docType === "invoice" ? "Invoice" : "Quote"})</span>
-            <Button variant="secondary" onClick={() => setEditorOpen(true)}>
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">{docType === "invoice" ? "Invoice" : "Quote"} template</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {isDefault ? "Using the default design." : "Using a custom design."} The code and preview open on demand.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setPreviewOpen(true)}>
+              Preview
+            </Button>
+            <Button variant="primary" onClick={() => setEditorOpen(true)}>
               Edit code
             </Button>
           </div>
-          <pre className="w-full h-[420px] overflow-auto bg-slate-900 text-slate-400 font-mono text-[11px] p-4 m-0 whitespace-pre-wrap">
-            {code}
-          </pre>
-        </Card>
-
-        <Card className="p-0 overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-slate-100 text-xs font-medium text-slate-500">Live preview</div>
-          <iframe
-            title="Template preview"
-            srcDoc={previewHtml}
-            sandbox="allow-same-origin"
-            className="w-full h-[420px] bg-white"
-          />
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex flex-wrap gap-1.5 max-w-3xl">
+        <div className="flex flex-wrap gap-1.5 max-w-2xl">
           {TEMPLATE_VARIABLES[docType].map((v) => (
-            <code key={v} className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+            <code key={v} className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
               {v}
             </code>
           ))}
         </div>
-        <Button variant="secondary" onClick={handleReset}>
+        <Button variant="secondary" onClick={handleReset} disabled={isDefault}>
           Reset to default
         </Button>
       </div>
+
+      {previewOpen && (
+        <TemplatePreviewModal docType={docType} code={code} business={business} onClose={() => setPreviewOpen(false)} />
+      )}
 
       {editorOpen && (
         <TemplateCodeEditorModal
@@ -708,6 +707,42 @@ function DocumentTemplatesTab() {
           }}
         />
       )}
+    </div>
+  )
+}
+
+// A read-only, modern surface for seeing how the current saved template
+// renders — opened via the "Preview" button rather than shown inline.
+function TemplatePreviewModal({
+  docType,
+  code,
+  business,
+  onClose,
+}: {
+  docType: "invoice" | "quote"
+  code: string
+  business: ReturnType<typeof useData>["business"]
+  onClose: () => void
+}) {
+  const previewHtml = useMemo(() => renderPreview(docType, code, business), [docType, code, business])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 animate-fade-in">
+      <Card className="w-full max-w-4xl p-0 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">
+            {docType === "invoice" ? "Invoice" : "Quote"} template preview
+          </h3>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            ✕
+          </button>
+        </div>
+        <iframe title="Template preview" srcDoc={previewHtml} sandbox="allow-same-origin" className="w-full h-[70vh] bg-white" />
+      </Card>
     </div>
   )
 }

@@ -17,7 +17,6 @@ export interface EmailInfoRow {
 
 export interface EmailShellParams {
   businessName: string
-  businessLogoDataUrl?: string
   eyebrow: string
   heading: string
   bodyHtml: string
@@ -55,7 +54,6 @@ function buttonHtml(button: EmailButton, primary: boolean) {
 
 export function renderEmailShell({
   businessName,
-  businessLogoDataUrl,
   eyebrow,
   heading,
   bodyHtml,
@@ -64,9 +62,11 @@ export function renderEmailShell({
   secondaryButton,
 }: EmailShellParams) {
   const safeBusiness = escapeHtml(businessName || "Your business")
-  const logo = businessLogoDataUrl
-    ? `<img src="${businessLogoDataUrl}" width="36" height="36" alt="" style="border-radius:10px;object-fit:cover;display:block;" />`
-    : `<div style="width:36px;height:36px;border-radius:10px;background:#2563EB;color:#ffffff;font-weight:700;font-family:Arial,sans-serif;font-size:15px;line-height:36px;text-align:center;">${safeBusiness.charAt(0).toUpperCase() || "?"}</div>`
+  // Never embed the uploaded logo image itself here: a base64 data URI can
+  // easily push the email past Gmail's ~100KB clipping threshold (showing a
+  // blank "[Message clipped]" body), and many clients don't render `data:`
+  // image sources at all. A plain colored initial is small and always renders.
+  const logo = `<div style="width:36px;height:36px;border-radius:10px;background:#2563EB;color:#ffffff;font-weight:700;font-family:Arial,sans-serif;font-size:15px;line-height:36px;text-align:center;">${safeBusiness.charAt(0).toUpperCase() || "?"}</div>`
 
   const buttonsHtml =
     primaryButton || secondaryButton

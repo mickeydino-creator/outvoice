@@ -69,14 +69,13 @@ function buildReminderEmail(params: {
   customMessage: string
   clientName: string
   businessName: string
-  businessLogoDataUrl?: string
   invoiceNumber: string
   total: string
   dueDate: string
   isOverdue: boolean
   viewUrl?: string
 }) {
-  const { customMessage, clientName, businessName, businessLogoDataUrl, invoiceNumber, total, dueDate, isOverdue, viewUrl } = params
+  const { customMessage, clientName, businessName, invoiceNumber, total, dueDate, isOverdue, viewUrl } = params
 
   const rendered = customMessage
     ? customMessage
@@ -93,7 +92,6 @@ function buildReminderEmail(params: {
 
   return renderEmailShell({
     businessName,
-    businessLogoDataUrl,
     eyebrow: "Payment reminder",
     heading: `Invoice #${invoiceNumber}`,
     bodyHtml: `<p style="margin:0;">${bodyHtml}</p>`,
@@ -206,7 +204,6 @@ Deno.serve(async (req: Request) => {
         customMessage: settings.message ?? "",
         clientName: client.name ?? "there",
         businessName: business?.name ?? "Your service provider",
-        businessLogoDataUrl: business?.logo_data_url ?? undefined,
         invoiceNumber: invoice.number,
         total: formatCurrency(total, business?.currency ?? "USD"),
         dueDate: dueKey,

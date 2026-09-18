@@ -15,7 +15,6 @@ export async function sendInvoiceByEmail(invoice: Invoice, client: Client, busin
   const body = buildDocumentEmail({
     kind: "invoice",
     businessName: business.name,
-    businessLogoDataUrl: business.logoDataUrl,
     clientName: client.name,
     number: invoice.number,
     total: formatCurrency(invoiceTotal(invoice), business.currency),
@@ -35,7 +34,6 @@ export async function sendQuoteByEmail(quote: Quote, client: Client, business: B
   const body = buildDocumentEmail({
     kind: "quote",
     businessName: business.name,
-    businessLogoDataUrl: business.logoDataUrl,
     clientName: client.name,
     number: quote.number,
     total: formatCurrency(invoiceTotal(quote), business.currency),
@@ -58,7 +56,6 @@ export async function sendInvoiceReminder(invoice: Invoice, client: Client, busi
 
   const body = renderEmailShell({
     businessName: business.name,
-    businessLogoDataUrl: business.logoDataUrl,
     eyebrow: "Payment reminder",
     heading: `Invoice #${invoice.number}`,
     bodyHtml: `<p style="margin:0;">Hi ${safeClient}, this is a friendly reminder that this invoice is still outstanding.</p>`,

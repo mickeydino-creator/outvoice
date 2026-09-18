@@ -112,7 +112,6 @@ Deno.serve(async (req: Request) => {
 
     const html = renderEmailShell({
       businessName: business.name,
-      businessLogoDataUrl: business.logo_data_url ?? undefined,
       eyebrow: "Quote update",
       heading: `Quote #${quote.number} was ${verb}`,
       bodyHtml: `<p style="margin:0;">${clientName} has <strong>${verb}</strong> this quote.${
