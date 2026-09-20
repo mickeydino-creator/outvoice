@@ -1,50 +1,51 @@
 import { Link } from "react-router-dom"
 
-const trustedBy = ["NORTHSTAR", "LUMEN&CO", "ARCFORM", "STUDIO NINE", "GREENFIELD"]
+const trustedBy = ["Northstar Studio", "Lumen & Co", "Arcform", "Studio Nine", "Greenfield"]
 
 const features = [
   {
-    index: "01",
-    title: "Move with clarity",
-    description: "Know what's owed, what's paid, and what happens next — at a glance.",
+    title: "See what's owed, instantly",
+    description: "A single dashboard shows every invoice, quote, and payment status — no digging through email threads.",
+    span: "lg:col-span-2",
   },
   {
-    index: "02",
-    title: "Keep it together",
-    description: "Clients, invoices, quotes, and payments in one calm, connected workspace.",
+    title: "Templates that look like you",
+    description: "Your logo, your colors, your tone — on every document you send.",
+    span: "",
   },
   {
-    index: "03",
-    title: "Look like yourself",
-    description: "Thoughtful templates and details that make every send feel considered.",
+    title: "Gentle reminders, sent for you",
+    description: "Overdue invoices follow up automatically, so you don't have to have that conversation.",
+    span: "",
+  },
+  {
+    title: "One place for every client",
+    description: "Contacts, history, and documents live together — nothing gets lost between projects.",
+    span: "lg:col-span-2",
   },
 ]
 
 const steps = [
   {
-    index: "01",
     title: "Add your clients",
     description: "Bring your relationships and contact details into one clean place.",
   },
   {
-    index: "02",
     title: "Create an invoice or quote",
-    description: "Start with a thoughtful template, then make it unmistakably yours.",
+    description: "Start from a thoughtful template, then make it unmistakably yours.",
   },
   {
-    index: "03",
-    title: "Send it and get paid",
-    description: "Send with confidence and see exactly when the money lands.",
+    title: "Send it, then relax",
+    description: "Track opens and payments, and let reminders handle the follow-up.",
   },
 ]
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      <div className="bg-slate-50 border-b border-slate-100">
-        <p className="text-center text-xs font-mono tracking-wide text-slate-500 py-2 px-4">
-          <span className="text-blue-600">●</span> Invoxa is the calmer way to run your business{" "}
-          <span aria-hidden="true">→</span>
+      <div className="bg-blue-600 text-white">
+        <p className="text-center text-xs sm:text-sm font-medium py-2 px-4">
+          Invoxa is the calmer way to run your business <span aria-hidden="true">→</span>
         </p>
       </div>
 
@@ -52,20 +53,20 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <img src="/logo.jpg" alt="Invoxa" className="h-7 w-auto" />
           <nav className="hidden md:flex items-center gap-8 text-sm text-slate-600">
-            <a href="#features" className="hover:text-slate-900">Product</a>
-            <a href="#how-it-works" className="hover:text-slate-900">How it works</a>
-            <a href="#for-teams" className="hover:text-slate-900">For teams</a>
-            <a href="#pricing" className="hover:text-slate-900">Pricing</a>
+            <a href="#features" className="hover:text-slate-900 transition-colors">Product</a>
+            <a href="#how-it-works" className="hover:text-slate-900 transition-colors">How it works</a>
+            <a href="#for-teams" className="hover:text-slate-900 transition-colors">For teams</a>
+            <a href="#pricing" className="hover:text-slate-900 transition-colors">Pricing</a>
           </nav>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
               Sign in
             </Link>
             <Link
               to="/signup"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 active:scale-[0.97] transition-all"
             >
-              Get started <span aria-hidden="true">↗</span>
+              Get started
             </Link>
           </div>
         </div>
@@ -73,85 +74,79 @@ export default function LandingPage() {
 
       <main>
         {/* Hero */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-16 pb-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-16 sm:pb-24 grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-12 lg:gap-16 items-center">
           <div>
-            <p className="flex items-center gap-1.5 text-xs font-mono font-medium tracking-wide text-blue-600 mb-4">
-              + INVOICING, WITHOUT THE NOISE
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold tracking-wide text-blue-700 mb-5">
+              Built for freelancers &amp; small teams
             </p>
-            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight leading-[1.05]">
-              Simple invoicing.
-              <br />
-              <span className="text-blue-600">Built for your business.</span>
+            <h1 className="text-[2.75rem] leading-[1.05] sm:text-6xl sm:leading-[1.05] font-extrabold tracking-tight text-balance">
+              Get paid without
+              <br className="hidden sm:block" /> the chasing.
             </h1>
-            <p className="mt-6 text-lg text-slate-500 max-w-md">
-              Invoices, quotes, clients, and payments — brought together in one beautifully focused workspace.
+            <p className="mt-6 text-lg text-slate-500 max-w-md text-pretty">
+              Invoices, quotes, clients, and payments — brought together in one calm, focused workspace built for how you actually work.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
+            <div className="mt-9 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <Link
                 to="/signup"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white hover:bg-slate-800 active:scale-[0.98] transition-all"
               >
-                Get started <span aria-hidden="true">↗</span>
+                Start for free
               </Link>
-              <a href="#how-it-works" className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-slate-900">
-                See how it works <span aria-hidden="true">→</span>
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border border-slate-200 px-6 py-3.5 text-sm font-semibold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+              >
+                See how it works
               </a>
             </div>
-            <p className="mt-6 text-xs text-slate-400">✓ No credit card required &nbsp;|&nbsp; Setup in minutes</p>
+            <p className="mt-6 text-xs text-slate-400">No credit card required · Set up in minutes</p>
           </div>
 
-          <div className="relative">
-            <div className="rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/5 overflow-hidden bg-white">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 text-xs font-mono text-slate-400">
-                <span>invoxa / quickstart</span>
-                <span className="flex items-center gap-1 text-emerald-500">● live</span>
-              </div>
-              <div className="p-5">
-                <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-4">
-                  <span>NEW INVOICE</span>
+          <div className="relative sm:pb-14">
+            <div className="rounded-2xl border border-slate-200 shadow-2xl shadow-slate-900/10 overflow-hidden bg-white">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <div>
+                  <p className="text-xs font-medium text-slate-400">Invoice INV-00428</p>
+                  <p className="text-sm font-semibold text-slate-900">Northstar Studio</p>
                 </div>
-                <dl className="space-y-3 text-sm font-mono">
-                  <div className="flex justify-between">
-                    <dt className="text-slate-400">client</dt>
-                    <dd className="text-slate-800">northstar-studio</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-slate-400">project</dt>
-                    <dd className="text-slate-800">brand direction</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-slate-400">amount</dt>
-                    <dd className="text-blue-600 font-semibold">$4,280.00</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-slate-400">status</dt>
-                    <dd className="text-emerald-500">ready to send</dd>
-                  </div>
-                </dl>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Paid
+                </span>
               </div>
-              <div className="px-5 py-3 border-t border-slate-100 text-xs font-mono text-slate-400">
-                invoice / INV-00428
+              <div className="px-5 py-4 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Brand direction &amp; identity</span>
+                  <span className="text-slate-700 font-medium">$3,200.00</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Design system setup</span>
+                  <span className="text-slate-700 font-medium">$1,080.00</span>
+                </div>
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-800">Total</span>
+                  <span className="text-lg font-bold text-blue-600">$4,280.00</span>
+                </div>
               </div>
             </div>
 
-            <div className="hidden sm:flex absolute -bottom-6 -right-4 items-center gap-3 rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-900/10 px-4 py-3 animate-fade-in">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">✓</span>
+            <div className="hidden sm:flex absolute bottom-0 -left-6 translate-y-[calc(100%+1rem)] items-center gap-3 rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 px-4 py-3 animate-fade-in">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white text-sm">✓</span>
               <div className="text-xs">
                 <p className="font-semibold text-slate-800">Payment received</p>
-                <p className="text-slate-400">Northstar Studio · just now</p>
+                <p className="text-slate-400">Just now · $4,280.00</p>
               </div>
-              <span className="text-sm font-semibold text-emerald-600">+$4,280</span>
             </div>
           </div>
         </section>
 
         {/* Trust strip */}
-        <section className="border-y border-slate-100 py-8">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs font-mono tracking-wide text-slate-400">BUILT FOR THE WAY YOU WORK</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+        <section className="border-y border-slate-100 py-10">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <p className="text-center text-xs font-semibold tracking-wide text-slate-400 mb-6">TRUSTED BY INDEPENDENT BUSINESSES LIKE</p>
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
               {trustedBy.map((name) => (
-                <span key={name} className="text-sm font-semibold text-slate-300 tracking-wide">
+                <span key={name} className="text-sm font-semibold text-slate-300">
                   {name}
                 </span>
               ))}
@@ -159,135 +154,75 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features */}
-        <section id="features" className="max-w-6xl mx-auto px-4 sm:px-6 py-24">
-          <p className="text-xs font-mono font-medium tracking-wide text-blue-600 mb-4">A BETTER DEFAULT</p>
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight max-w-xl">
-            Everything you need.
-            <br />
-            <span className="text-blue-600">Nothing you don't.</span>
+        {/* Features - bento grid */}
+        <section id="features" className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+          <p className="text-xs font-semibold tracking-wide text-blue-600 mb-4">A BETTER DEFAULT</p>
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight max-w-xl text-balance">
+            Everything you need. Nothing you don't.
           </h2>
           <p className="mt-5 text-slate-500 max-w-md">
-            Invoxa makes the operational side of your business feel as clear and intentional as the work itself.
+            Invoxa handles the operational side of your business so it feels as clear and intentional as the work itself.
           </p>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-px bg-slate-100 rounded-2xl overflow-hidden border border-slate-100">
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-4">
             {features.map((f) => (
-              <div key={f.index} className="bg-slate-50 p-8">
-                <span className="text-xs font-mono text-blue-500">{f.index}</span>
-                <h3 className="mt-10 text-lg font-semibold text-slate-900">{f.title}</h3>
-                <p className="mt-2 text-sm text-slate-500 leading-relaxed">{f.description}</p>
+              <div key={f.title} className={f.span}>
+                <div className="h-full rounded-2xl border border-slate-200 bg-slate-50/60 p-7 sm:p-8 hover:border-slate-300 hover:bg-slate-50 transition-colors">
+                  <h3 className="text-lg font-semibold text-slate-900">{f.title}</h3>
+                  <p className="mt-2.5 text-sm text-slate-500 leading-relaxed max-w-sm">{f.description}</p>
+                </div>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* In sync / code mockup */}
-        <section className="bg-slate-50 border-y border-slate-100">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-xs font-mono font-medium tracking-wide text-blue-600 mb-4">&lt;/&gt; ONE SOURCE OF TRUTH</p>
-              <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-                Your business,
-                <br />
-                <span className="text-blue-600">in sync.</span>
-              </h2>
-              <p className="mt-5 text-slate-500 max-w-sm">
-                From the first quote to the final payment, Invoxa keeps the details connected so you can keep moving.
-              </p>
-              <ul className="mt-6 space-y-2 text-sm text-slate-600">
-                <li className="flex items-center gap-2">
-                  <CheckIcon /> Clear by default
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon /> Designed to scale
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckIcon /> Human in every detail
-                </li>
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/5 overflow-hidden">
-              <div className="flex items-center gap-4 px-5 pt-4 text-xs font-mono text-slate-400 border-b border-slate-100 pb-3">
-                <span className="text-slate-900 border-b-2 border-blue-600 pb-3 -mb-3">01 invoice.create</span>
-                <span>02 quote.send</span>
-                <span>03 payment.track</span>
-              </div>
-              <div className="px-5 py-2 text-xs font-mono text-slate-400 border-b border-slate-100">invoice.create.ts</div>
-              <pre className="px-5 py-4 text-xs font-mono leading-6 text-slate-600 overflow-x-auto">
-{`const invoice = await invoxa.invoices.create({
-  client: "northstar-studio",
-  currency: "USD",
-  line_items: [
-    { description: "Brand direction", amount: 428000 }
-  ],
-  due_date: "2026-10-24"
-});`}
-              </pre>
-              <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 text-xs font-mono text-slate-400">
-                <span className="text-emerald-500">◷ Ready</span>
-                <span>Invoxa API ↗</span>
-              </div>
-            </div>
           </div>
         </section>
 
         {/* How it works */}
-        <section id="how-it-works" className="max-w-6xl mx-auto px-4 sm:px-6 py-24 text-center">
-          <p className="text-xs font-mono font-medium tracking-wide text-blue-600 mb-4">A SIMPLER RHYTHM</p>
-          <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-            From first hello
-            <br />
-            <span className="text-blue-600">to paid in full.</span>
-          </h2>
-          <p className="mt-5 text-slate-500 max-w-md mx-auto">
-            Three small steps stand between great work and getting paid for it.
-          </p>
+        <section id="how-it-works" className="bg-slate-900 text-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
+            <p className="text-xs font-semibold tracking-wide text-blue-400 mb-4">A SIMPLER RHYTHM</p>
+            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight max-w-lg text-balance">
+              From first hello to paid in full.
+            </h2>
 
-          <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-10 text-left">
-            {steps.map((step) => (
-              <div key={step.index}>
-                <p className="text-xs font-mono text-slate-400 mb-3">{step.index}</p>
-                <div className="h-14 w-14 rounded-xl border border-blue-100 bg-blue-50 flex items-center justify-center text-blue-600 mb-5">
-                  <StepIcon index={step.index} />
+            <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-8">
+              {steps.map((step, i) => (
+                <div key={step.title}>
+                  <p className="text-4xl font-extrabold text-slate-700 mb-4">0{i + 1}</p>
+                  <h3 className="font-semibold text-white">{step.title}</h3>
+                  <p className="mt-2 text-sm text-slate-400 leading-relaxed">{step.description}</p>
                 </div>
-                <h3 className="font-semibold text-slate-900">{step.title}</h3>
-                <p className="mt-1.5 text-sm text-slate-500">{step.description}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
 
-        {/* Divider strip */}
-        <section id="for-teams" className="border-t border-slate-100">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm font-semibold text-slate-800 text-center sm:text-left">
+        {/* For teams strip */}
+        <section id="for-teams" className="border-b border-slate-100">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <p className="text-sm font-semibold text-slate-800">
               For freelancers, small teams, and people building what's next.
             </p>
-            <a href="#pricing" className="text-sm font-medium text-slate-500 hover:text-slate-800">
+            <a href="#pricing" className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
               See pricing <span aria-hidden="true">→</span>
             </a>
           </div>
         </section>
 
         {/* Final CTA */}
-        <section id="pricing" className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-          <div className="rounded-3xl bg-blue-50/70 border border-blue-100 px-6 py-20 text-center">
-            <p className="text-xs font-mono font-medium tracking-wide text-blue-500 mb-4">START WITH A CLEARER DAY</p>
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-              Ready to simplify
-              <br />
-              <span className="text-blue-600">your invoicing?</span>
+        <section id="pricing" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          <div className="rounded-3xl bg-blue-600 px-6 sm:px-10 py-16 sm:py-20 text-center text-white">
+            <p className="text-xs font-semibold tracking-wide text-blue-200 mb-4">START WITH A CLEARER DAY</p>
+            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-balance">
+              Ready to simplify your invoicing?
             </h2>
-            <p className="mt-5 text-slate-500">Get back to the part of your business you actually love.</p>
+            <p className="mt-5 text-blue-100">Get back to the part of your business you actually love.</p>
             <Link
               to="/signup"
-              className="mt-8 inline-flex items-center gap-1.5 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm hover:shadow-md transition-shadow"
+              className="mt-9 inline-flex items-center justify-center gap-1.5 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 hover:bg-blue-50 active:scale-[0.98] transition-all"
             >
-              Get started <span aria-hidden="true">↗</span>
+              Get started free
             </Link>
-            <p className="mt-4 text-xs text-slate-400">Free to start · No credit card required</p>
+            <p className="mt-4 text-xs text-blue-200">Free to start · No credit card required</p>
           </div>
         </section>
       </main>
@@ -319,37 +254,5 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg className="h-4 w-4 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
-}
-
-function StepIcon({ index }: { index: string }) {
-  if (index === "01") {
-    return (
-      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="9" cy="8" r="3.2" />
-        <path d="M2.5 20c1-3.6 3.7-5.5 6.5-5.5s5.5 1.9 6.5 5.5" />
-      </svg>
-    )
-  }
-  if (index === "02") {
-    return (
-      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <path d="M6 3h9l3 3v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-        <path d="M9 9h6M9 13h6M9 17h3" />
-      </svg>
-    )
-  }
-  return (
-    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7 17 17 7M8 7h9v9" />
-    </svg>
   )
 }

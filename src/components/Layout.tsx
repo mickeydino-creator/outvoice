@@ -94,7 +94,10 @@ export default function Layout() {
         <Outlet />
       </div>
 
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur">
+      <nav
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
         <div className="grid grid-cols-4">
           {mobilePrimary.map((item) => (
             <NavLink
@@ -102,7 +105,7 @@ export default function Layout() {
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-1 py-2.5 text-xs font-medium ${
+                `flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 text-xs font-medium active:bg-slate-50 transition-colors ${
                   isActive ? "text-blue-600" : "text-slate-500"
                 }`
               }
@@ -113,7 +116,7 @@ export default function Layout() {
           ))}
           <button
             onClick={() => setMoreOpen(true)}
-            className="flex flex-col items-center gap-1 py-2.5 text-xs font-medium text-slate-500"
+            className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 text-xs font-medium text-slate-500 active:bg-slate-50 transition-colors"
           >
             <MoreIcon className="h-5 w-5" />
             More
@@ -122,9 +125,15 @@ export default function Layout() {
       </nav>
 
       {moreOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex items-end bg-slate-900/40 animate-fade-in" onClick={() => setMoreOpen(false)}>
+        <div
+          className="lg:hidden fixed inset-0 z-50 flex items-end bg-slate-900/40 animate-fade-in"
+          onClick={() => setMoreOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
           <div
-            className="w-full rounded-t-2xl bg-white p-4 pb-8 animate-toast-in"
+            className="w-full rounded-t-2xl bg-white p-4 animate-toast-in"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.5rem)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-200" />
@@ -135,7 +144,7 @@ export default function Layout() {
                   to={item.to}
                   onClick={() => setMoreOpen(false)}
                   className={({ isActive }) =>
-                    `flex flex-col items-center gap-2 rounded-xl px-2 py-4 text-xs font-medium ${
+                    `flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-4 min-h-[76px] text-xs font-medium active:scale-[0.97] transition-all ${
                       isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 bg-slate-50"
                     }`
                   }
@@ -149,7 +158,7 @@ export default function Layout() {
                   setMoreOpen(false)
                   handleSignOut()
                 }}
-                className="flex flex-col items-center gap-2 rounded-xl px-2 py-4 text-xs font-medium text-red-500 bg-red-50"
+                className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-4 min-h-[76px] text-xs font-medium text-red-500 bg-red-50 active:scale-[0.97] transition-all"
               >
                 <LogoutIcon className="h-5 w-5" />
                 <span className="text-center leading-tight">Sign out</span>
