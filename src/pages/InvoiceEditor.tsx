@@ -7,6 +7,7 @@ import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
 import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
 import type { Invoice, LineItem } from "../types"
 import InvoiceDocument from "../components/InvoiceDocument"
+import LivePreviewPanel from "../components/LivePreviewPanel"
 import { sendInvoiceByEmail } from "../lib/documentEmail"
 
 export default function InvoiceEditor() {
@@ -276,8 +277,8 @@ export default function InvoiceEditor() {
               </Card>
             </div>
 
-            <div className="space-y-6">
-              <Card className="p-5 space-y-3 sticky top-24">
+            <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+              <Card className="p-5 space-y-3">
                 <h3 className="text-sm font-semibold text-slate-800 mb-1">Summary</h3>
                 <SummaryRow label="Subtotal" value={formatCurrency(subtotal, business.currency)} />
                 <SummaryRow label="Tax" value={formatCurrency(tax, business.currency)} />
@@ -291,6 +292,13 @@ export default function InvoiceEditor() {
                     Select a client and add at least one line item to save.
                   </p>
                 )}
+              </Card>
+
+              <Card className="hidden lg:block p-3">
+                <h3 className="text-sm font-semibold text-slate-800 px-2 pt-1 pb-3">Live preview</h3>
+                <LivePreviewPanel>
+                  <InvoiceDocument invoice={invoice} client={client} business={business} />
+                </LivePreviewPanel>
               </Card>
             </div>
           </div>

@@ -23,13 +23,6 @@ import Reports from "./pages/Reports"
 import Settings from "./pages/Settings"
 import Onboarding from "./pages/Onboarding"
 
-function RootRoute() {
-  const { user, loading } = useAuth()
-  if (loading) return <LoadingScreen />
-  if (user) return <Navigate to="/dashboard" replace />
-  return <LandingPage />
-}
-
 function RequireAuth() {
   const { user, loading } = useAuth()
   if (loading) return <LoadingScreen />
@@ -72,7 +65,7 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<RootRoute />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<SignIn />} />
       <Route path="/q/:id" element={<PublicQuote />} />
