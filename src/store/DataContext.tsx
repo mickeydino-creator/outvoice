@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
-import type { BusinessProfile, Client, DocumentTemplates, Invoice, InvoiceStatus, LineItem, Product, Quote, QuoteStatus, ReminderLogEntry, ReminderSettings } from "../types"
+import type { BusinessProfile, Client, DocumentTemplates, Invoice, InvoiceStatus, LineItem, Product, Quote, QuoteStatus, RecurringInvoice, ReminderLogEntry, ReminderSettings } from "../types"
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient"
 import { useAuth } from "./AuthContext"
 import { defaultDocumentTemplates, defaultReminderSettings, emptyBusinessProfile } from "../lib/defaults"
@@ -16,10 +16,13 @@ import {
   productToRow,
   quoteFromRow,
   quoteToRow,
+  recurringFromRow,
+  recurringToRow,
   reminderSettingsFromRow,
   reminderSettingsToRow,
 } from "../lib/supabaseMappers"
 import { effectiveStatus, invoiceTotal } from "../lib/calc"
+import { browserTimezone, withNextRun } from "../lib/recurringSchedule"
 
 interface DataContextValue {
   loading: boolean
@@ -57,6 +60,11 @@ interface DataContextValue {
   updateReminderSettings: (patch: Partial<ReminderSettings>) => void
   reminderLog: ReminderLogEntry[]
   refreshReminderLog: () => void
+  recurringInvoices: RecurringInvoice[]
+  createBlankRecurring: (fromInvoiceId?: string) => RecurringInvoice
+  saveRecurring: (recurring: RecurringInvoice) => RecurringInvoice
+  setRecurringActive: (id: string, active: boolean) => RecurringInvoice | undefined
+  deleteRecurring: (id: string) => void
 }
 
 const DataContext = createContext<DataContextValue | null>(null)
@@ -87,6 +95,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [templates, setTemplates] = useState<DocumentTemplates>(defaultDocumentTemplates)
   const [reminderSettings, setReminderSettings] = useState<ReminderSettings>(defaultReminderSettings)
   const [reminderLog, setReminderLog] = useState<ReminderLogEntry[]>([])
+  const [recurringInvoices, setRecurringInvoices] = useState<RecurringInvoice[]>([])
 
   useEffect(() => {
     // Reset to a clean slate whenever the signed-in user changes (including
@@ -99,6 +108,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setTemplates(defaultDocumentTemplates)
     setReminderSettings(defaultReminderSettings)
     setReminderLog([])
+    setRecurringInvoices([])
 
     if (!isSupabaseConfigured || !userId) {
       setLoading(false)
@@ -110,7 +120,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     async function loadAll() {
       const uid = userId as string
-      const [clientsRes, productsRes, invoicesRes, quotesRes, businessRes, templatesRes, reminderSettingsRes, reminderLogRes] = await Promise.allSettled([
+      const [clientsRes, productsRes, invoicesRes, quotesRes, businessRes, templatesRes, reminderSettingsRes, reminderLogRes, recurringRes] = await Promise.allSettled([
         supabase.from("clients").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("products").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
         supabase.from("invoices").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
@@ -119,6 +129,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from("document_templates").select("*").eq("user_id", uid),
         supabase.from("invoice_reminder_settings").select("*").eq("user_id", uid).maybeSingle(),
         supabase.from("invoice_reminders").select("*").eq("user_id", uid).order("sent_at", { ascending: false }).limit(10),
+        supabase.from("recurring_invoices").select("*").eq("user_id", uid).order("created_at", { ascending: false }),
       ])
 
       if (cancelled) return
@@ -174,6 +185,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         )
       }
 
+      if (recurringRes.status === "rejected" || recurringRes.value.error) logSupabaseError("load recurring_invoices", recurringRes.status === "rejected" ? recurringRes.reason : recurringRes.value.error)
+      else setRecurringInvoices((recurringRes.value.data ?? []).map(recurringFromRow))
+
       setLoading(false)
     }
 
@@ -181,6 +195,31 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
+  }, [userId])
+
+  // Recurring invoices are created server-side while the app may be open, so
+  // re-read invoices and schedules whenever the tab regains focus. Without
+  // this, a stale list would also make nextInvoiceNumber reuse a number.
+  useEffect(() => {
+    if (!isSupabaseConfigured || !userId) return
+    const uid = userId
+    function refresh() {
+      if (document.visibilityState !== "visible") return
+      supabase
+        .from("invoices")
+        .select("*")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .then(({ data, error }) => (error ? logSupabaseError("refresh invoices", error) : setInvoices((data ?? []).map(invoiceFromRow))))
+      supabase
+        .from("recurring_invoices")
+        .select("*")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: false })
+        .then(({ data, error }) => (error ? logSupabaseError("refresh recurring_invoices", error) : setRecurringInvoices((data ?? []).map(recurringFromRow))))
+    }
+    document.addEventListener("visibilitychange", refresh)
+    return () => document.removeEventListener("visibilitychange", refresh)
   }, [userId])
 
   function nextInvoiceNumber() {
@@ -276,6 +315,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
       sentAt: undefined,
       paidAt: undefined,
+      recurringId: undefined,
       items: source.items.map((it) => ({ ...it, id: makeId() })),
     }
     setInvoices((prev) => [copy, ...prev])
@@ -536,6 +576,64 @@ export function DataProvider({ children }: { children: ReactNode }) {
       })
   }
 
+  function createBlankRecurring(fromInvoiceId?: string): RecurringInvoice {
+    const source = fromInvoiceId ? invoices.find((inv) => inv.id === fromInvoiceId) : undefined
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const pad = (n: number) => String(n).padStart(2, "0")
+    return {
+      id: makeId(),
+      clientId: source?.clientId ?? clients[0]?.id ?? "",
+      items: source ? source.items.map((it) => ({ ...it, id: makeId() })) : [makeBlankLineItem()],
+      discount: source?.discount ?? 0,
+      notes: source?.notes ?? (business.invoiceFooter || ""),
+      paymentTerms: source?.paymentTerms ?? (business.defaultPaymentTerms || "Net 14"),
+      frequency: "month",
+      interval: 1,
+      startDate: `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`,
+      sendTime: "09:00",
+      // The freelancer picks a time on their own clock, so default to the
+      // browser's zone rather than the business setting (which defaults to UTC).
+      timezone: browserTimezone(),
+      active: true,
+      runCount: 0,
+      createdAt: new Date().toISOString(),
+    }
+  }
+
+  function persistRecurring(recurring: RecurringInvoice, action: string) {
+    supabase
+      .from("recurring_invoices")
+      // Saving counts as acknowledging the last error.
+      .upsert({ ...recurringToRow(recurring), last_error: null, user_id: userId })
+      .then(({ error }) => error && logSupabaseError(action, error))
+  }
+
+  function saveRecurring(recurring: RecurringInvoice) {
+    const next = { ...withNextRun(recurring), lastError: undefined }
+    setRecurringInvoices((prev) => {
+      const exists = prev.some((r) => r.id === next.id)
+      return exists ? prev.map((r) => (r.id === next.id ? next : r)) : [next, ...prev]
+    })
+    persistRecurring(next, "saveRecurring")
+    return next
+  }
+
+  function setRecurringActive(id: string, active: boolean) {
+    const current = recurringInvoices.find((r) => r.id === id)
+    if (!current) return undefined
+    return saveRecurring({ ...current, active })
+  }
+
+  function deleteRecurring(id: string) {
+    setRecurringInvoices((prev) => prev.filter((r) => r.id !== id))
+    supabase
+      .from("recurring_invoices")
+      .delete()
+      .eq("id", id)
+      .then(({ error }) => error && logSupabaseError("deleteRecurring", error))
+  }
+
   const value = useMemo<DataContextValue>(
     () => ({
       loading,
@@ -573,9 +671,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateReminderSettings,
       reminderLog,
       refreshReminderLog,
+      recurringInvoices,
+      createBlankRecurring,
+      saveRecurring,
+      setRecurringActive,
+      deleteRecurring,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, clients, invoices, quotes, products, business, templates, reminderSettings, reminderLog]
+    [loading, clients, invoices, quotes, products, business, templates, reminderSettings, reminderLog, recurringInvoices]
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

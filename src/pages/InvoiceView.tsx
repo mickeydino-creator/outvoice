@@ -13,7 +13,7 @@ import { downloadHtmlAsPdf } from "../lib/pdf"
 export default function InvoiceView() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { invoices, quotes, getClient, business, templates, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
+  const { invoices, quotes, recurringInvoices, getClient, business, templates, markInvoiceStatus, duplicateInvoice, deleteInvoice } = useData()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
   const [downloading, setDownloading] = useState(false)
@@ -35,6 +35,7 @@ export default function InvoiceView() {
   const client = getClient(invoice.clientId)
   const status = effectiveStatus(invoice)
   const sourceQuote = invoice.quoteId ? quotes.find((q) => q.id === invoice.quoteId) : undefined
+  const sourceRecurring = invoice.recurringId ? recurringInvoices.find((r) => r.id === invoice.recurringId) : undefined
 
   async function handleSend() {
     if (!invoice) return
@@ -127,6 +128,11 @@ export default function InvoiceView() {
             <Button variant="secondary" onClick={handleDuplicate}>
               שכפול
             </Button>
+            {!sourceRecurring && (
+              <Button variant="secondary" onClick={() => navigate(`/recurring/new?from=${invoice.id}`)}>
+                הגדרה כחוזרת
+              </Button>
+            )}
             <Button variant="secondary" onClick={handleDownload} disabled={downloading}>
               {downloading ? "בהכנה..." : "הורדת PDF"}
             </Button>
@@ -155,6 +161,15 @@ export default function InvoiceView() {
             נוצרה מתוך{" "}
             <button className="font-medium underline" onClick={() => navigate(`/quotes/${sourceQuote.id}`)}>
               הצעת מחיר {sourceQuote.number}
+            </button>
+            .
+          </div>
+        )}
+        {sourceRecurring && (
+          <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+            נוצרה אוטומטית מתוך{" "}
+            <button className="font-medium underline" onClick={() => navigate(`/recurring/${sourceRecurring.id}`)}>
+              חשבונית חוזרת
             </button>
             .
           </div>

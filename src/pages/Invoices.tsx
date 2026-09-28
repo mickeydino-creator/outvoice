@@ -33,9 +33,14 @@ export default function Invoices() {
         title="חשבוניות"
         subtitle={`סה״כ ${invoices.length} חשבוניות`}
         actions={
-          <Button variant="primary" onClick={() => navigate("/invoices/new")}>
-            <PlusIcon /> יצירת חשבונית
-          </Button>
+          <>
+            <Button variant="secondary" onClick={() => navigate("/recurring")}>
+              חשבוניות חוזרות
+            </Button>
+            <Button variant="primary" onClick={() => navigate("/invoices/new")}>
+              <PlusIcon /> יצירת חשבונית
+            </Button>
+          </>
         }
       />
 

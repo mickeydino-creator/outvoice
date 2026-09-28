@@ -1,19 +1,20 @@
 import { useMemo, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { useData, makeBlankLineItem } from "../store/DataContext"
+import { useData } from "../store/DataContext"
 import { useToast } from "../store/ToastContext"
 import PageHeader from "../components/PageHeader"
 import { Button, Card, Input, Label, Select, Textarea } from "../components/ui"
-import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal, lineTotal } from "../lib/calc"
-import type { Invoice, LineItem } from "../types"
+import { formatCurrency, invoiceSubtotal, invoiceTax, invoiceTotal } from "../lib/calc"
+import type { Invoice } from "../types"
 import InvoiceDocument from "../components/InvoiceDocument"
 import LivePreviewPanel from "../components/LivePreviewPanel"
+import LineItemsCard from "../components/LineItemsCard"
 import { sendInvoiceByEmail } from "../lib/documentEmail"
 
 export default function InvoiceEditor() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { invoices, clients, products, business, saveInvoice, createBlankInvoice, getClient } = useData()
+  const { invoices, clients, business, saveInvoice, createBlankInvoice, getClient } = useData()
   const { showToast } = useToast()
   const [sending, setSending] = useState(false)
 
@@ -36,33 +37,6 @@ export default function InvoiceEditor() {
 
   function updateField<K extends keyof Invoice>(key: K, value: Invoice[K]) {
     setInvoice((prev) => ({ ...prev, [key]: value }))
-  }
-
-  function updateItem(itemId: string, patch: Partial<LineItem>) {
-    setInvoice((prev) => ({
-      ...prev,
-      items: prev.items.map((it) => (it.id === itemId ? { ...it, ...patch } : it)),
-    }))
-  }
-
-  function addItem() {
-    setInvoice((prev) => ({ ...prev, items: [...prev.items, makeBlankLineItem()] }))
-  }
-
-  function addProductItem(productId: string) {
-    const product = products.find((p) => p.id === productId)
-    if (!product) return
-    setInvoice((prev) => ({
-      ...prev,
-      items: [
-        ...prev.items,
-        { id: `li-${Date.now()}-${Math.random()}`, description: product.name, quantity: 1, unitPrice: product.price, taxRate: product.taxRate, productId: product.id },
-      ],
-    }))
-  }
-
-  function removeItem(itemId: string) {
-    setInvoice((prev) => ({ ...prev, items: prev.items.filter((it) => it.id !== itemId) }))
   }
 
   const canSave = useMemo(() => !!invoice.clientId && invoice.items.some((it) => it.description.trim()), [invoice])
@@ -170,89 +144,7 @@ export default function InvoiceEditor() {
                 </div>
               </Card>
 
-              <Card className="p-5">
-                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-                  <h3 className="text-sm font-semibold text-slate-800">פריטים</h3>
-                  <div className="flex gap-2">
-                    {products.length > 0 && (
-                      <Select
-                        className="w-56"
-                        value=""
-                        onChange={(e) => {
-                          if (e.target.value) addProductItem(e.target.value)
-                        }}
-                      >
-                        <option value="">+ הוספה ממוצרים ושירותים</option>
-                        {products.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </Select>
-                    )}
-                    <Button size="sm" variant="secondary" onClick={addItem}>
-                      + הוספת פריט
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="hidden sm:grid grid-cols-12 gap-3 text-xs font-medium text-slate-400 px-1">
-                    <div className="col-span-5">תיאור</div>
-                    <div className="col-span-2">כמות</div>
-                    <div className="col-span-2">מחיר ליחידה</div>
-                    <div className="col-span-1">מע״מ %</div>
-                    <div className="col-span-2 text-end">סכום</div>
-                  </div>
-                  {invoice.items.map((item) => (
-                    <div key={item.id} className="grid grid-cols-2 sm:grid-cols-12 gap-3 items-center">
-                      <div className="col-span-2 sm:col-span-5">
-                        <Input
-                          placeholder="לדוגמה: עיצוב זהות מותגית"
-                          value={item.description}
-                          onChange={(e) => updateItem(item.id, { description: e.target.value })}
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Input
-                          type="number"
-                          min={0}
-                          value={item.quantity}
-                          onChange={(e) => updateItem(item.id, { quantity: Number(e.target.value) })}
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Input
-                          type="number"
-                          min={0}
-                          value={item.unitPrice}
-                          onChange={(e) => updateItem(item.id, { unitPrice: Number(e.target.value) })}
-                        />
-                      </div>
-                      <div className="sm:col-span-1">
-                        <Input
-                          type="number"
-                          min={0}
-                          value={item.taxRate}
-                          onChange={(e) => updateItem(item.id, { taxRate: Number(e.target.value) })}
-                        />
-                      </div>
-                      <div className="col-span-2 sm:col-span-2 flex items-center justify-between sm:justify-end gap-2">
-                        <span className="text-sm font-medium text-slate-700">
-                          {formatCurrency(lineTotal(item), business.currency)}
-                        </span>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="text-slate-300 hover:text-red-500 transition-colors"
-                          aria-label="הסרת פריט"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+              <LineItemsCard items={invoice.items} onChange={(items) => updateField("items", items)} />
 
               <Card className="p-5 space-y-4">
                 <div>
@@ -314,13 +206,5 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
       <span className="text-slate-500">{label}</span>
       <span className="text-slate-700">{value}</span>
     </div>
-  )
-}
-
-function TrashIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M4 7h16M9 7V4h6v3m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" />
-    </svg>
   )
 }

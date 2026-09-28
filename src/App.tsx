@@ -12,6 +12,8 @@ import Dashboard from "./pages/Dashboard"
 import Invoices from "./pages/Invoices"
 import InvoiceEditor from "./pages/InvoiceEditor"
 import InvoiceView from "./pages/InvoiceView"
+import RecurringInvoices from "./pages/RecurringInvoices"
+import RecurringInvoiceEditor from "./pages/RecurringInvoiceEditor"
 import Quotes from "./pages/Quotes"
 import QuoteEditor from "./pages/QuoteEditor"
 import QuoteView from "./pages/QuoteView"
@@ -80,6 +82,9 @@ export default function App() {
             <Route path="/invoices/new" element={<InvoiceEditor />} />
             <Route path="/invoices/:id" element={<InvoiceView />} />
             <Route path="/invoices/:id/edit" element={<InvoiceEditor />} />
+            <Route path="/recurring" element={<RecurringInvoices />} />
+            <Route path="/recurring/new" element={<RecurringInvoiceEditor />} />
+            <Route path="/recurring/:id" element={<RecurringInvoiceEditor />} />
             <Route path="/quotes" element={<Quotes />} />
             <Route path="/quotes/new" element={<QuoteEditor />} />
             <Route path="/quotes/:id" element={<QuoteView />} />

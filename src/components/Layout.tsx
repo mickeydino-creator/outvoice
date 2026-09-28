@@ -6,6 +6,7 @@ import { useAuth } from "../store/AuthContext"
 const navItems = [
   { to: "/dashboard", label: "מרכז הבקרה", icon: DashboardIcon, end: true },
   { to: "/invoices", label: "חשבוניות", icon: InvoiceIcon },
+  { to: "/recurring", label: "חשבוניות חוזרות", icon: RepeatIcon },
   { to: "/quotes", label: "הצעות מחיר", icon: QuoteIcon },
   { to: "/clients", label: "לקוחות", icon: ClientsIcon },
   { to: "/products", label: "מוצרים ושירותים", icon: ProductIcon },
@@ -14,8 +15,9 @@ const navItems = [
   { to: "/settings", label: "הגדרות", icon: SettingsIcon },
 ]
 
-const mobilePrimary = navItems.slice(0, 3)
-const mobileMore = navItems.slice(3)
+const MOBILE_PRIMARY = ["/dashboard", "/invoices", "/quotes"]
+const mobilePrimary = navItems.filter((item) => MOBILE_PRIMARY.includes(item.to))
+const mobileMore = navItems.filter((item) => !MOBILE_PRIMARY.includes(item.to))
 
 export default function Layout() {
   const { business } = useData()
@@ -173,6 +175,17 @@ function InvoiceIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M6 3h9l3 3v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
       <path d="M9 9h6M9 13h6M9 17h3" />
+    </svg>
+  )
+}
+
+function RepeatIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 2l3 3-3 3" />
+      <path d="M4 11V9a4 4 0 0 1 4-4h12" />
+      <path d="M7 22l-3-3 3-3" />
+      <path d="M20 13v2a4 4 0 0 1-4 4H4" />
     </svg>
   )
 }

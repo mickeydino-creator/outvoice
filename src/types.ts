@@ -35,6 +35,31 @@ export interface Invoice {
   sentAt?: string
   paidAt?: string
   quoteId?: string
+  recurringId?: string
+}
+
+export type RecurringFrequency = "day" | "week" | "month" | "year"
+
+export interface RecurringInvoice {
+  id: string
+  clientId: string
+  items: LineItem[]
+  discount: number
+  notes: string
+  paymentTerms: string
+  frequency: RecurringFrequency
+  interval: number
+  startDate: string // YYYY-MM-DD
+  sendTime: string // HH:MM
+  timezone: string
+  endDate?: string
+  nextRunAt?: string
+  active: boolean
+  lastRunAt?: string
+  lastInvoiceId?: string
+  lastError?: string
+  runCount: number
+  createdAt: string
 }
 
 export interface Quote {

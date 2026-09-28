@@ -19,6 +19,12 @@ This app stores all data in Supabase and sends invoice/quote emails through Rese
      ```
    - Optionally set a verified sender: `supabase secrets set RESEND_FROM_EMAIL="Your Business <billing@yourdomain.com>"`.
 
+3. **Recurring invoices (optional)**
+   - Run `supabase/migrations/0005_recurring_invoices.sql`.
+   - Deploy the scheduler function: `supabase functions deploy send-recurring-invoices`.
+   - Set `APP_URL` so emails link to the public invoice page: `supabase secrets set APP_URL=https://your-app.example.com`.
+   - Schedule the function every 5 minutes (Supabase dashboard -> Database -> Cron, or the SQL at the bottom of the migration). Without this job, recurring invoices are saved but never sent.
+
 Once both are configured, run `npm run dev`. The app starts with no data — go through onboarding and add your first client/invoice.
 
 ## React + TypeScript + Vite

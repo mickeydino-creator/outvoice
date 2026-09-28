@@ -1,4 +1,4 @@
-import type { BusinessProfile, Client, Invoice, LineItem, Product, Quote, ReminderSettings } from "../types"
+import type { BusinessProfile, Client, Invoice, LineItem, Product, Quote, RecurringInvoice, ReminderSettings } from "../types"
 
 export function clientFromRow(row: any): Client {
   return {
@@ -69,6 +69,7 @@ export function invoiceFromRow(row: any): Invoice {
     sentAt: row.sent_at ?? undefined,
     paidAt: row.paid_at ?? undefined,
     quoteId: row.quote_id ?? undefined,
+    recurringId: row.recurring_id ?? undefined,
   }
 }
 
@@ -88,6 +89,7 @@ export function invoiceToRow(invoice: Invoice) {
     sent_at: invoice.sentAt ?? null,
     paid_at: invoice.paidAt ?? null,
     quote_id: invoice.quoteId ?? null,
+    recurring_id: invoice.recurringId ?? null,
   }
 }
 
@@ -192,5 +194,51 @@ export function reminderSettingsToRow(settings: ReminderSettings) {
     on_due_date: settings.onDueDate,
     days_after: settings.daysAfter,
     message: settings.message,
+  }
+}
+
+export function recurringFromRow(row: any): RecurringInvoice {
+  return {
+    id: row.id,
+    clientId: row.client_id ?? "",
+    items: itemsFromJson(row.items),
+    discount: Number(row.discount) || 0,
+    notes: row.notes ?? "",
+    paymentTerms: row.payment_terms ?? "",
+    frequency: row.frequency,
+    interval: Number(row.interval_count) || 1,
+    startDate: String(row.start_date),
+    sendTime: String(row.send_time ?? "09:00").slice(0, 5),
+    timezone: row.timezone ?? "UTC",
+    endDate: row.end_date ?? undefined,
+    nextRunAt: row.next_run_at ?? undefined,
+    active: Boolean(row.active),
+    lastRunAt: row.last_run_at ?? undefined,
+    lastInvoiceId: row.last_invoice_id ?? undefined,
+    lastError: row.last_error ?? undefined,
+    runCount: Number(row.run_count) || 0,
+    createdAt: row.created_at,
+  }
+}
+
+// Only the fields the app edits; run bookkeeping (last_run_at, run_count,
+// last_error...) is owned by the send-recurring-invoices Edge Function.
+export function recurringToRow(r: RecurringInvoice) {
+  return {
+    id: r.id,
+    client_id: r.clientId || null,
+    items: r.items,
+    discount: r.discount,
+    notes: r.notes,
+    payment_terms: r.paymentTerms,
+    frequency: r.frequency,
+    interval_count: r.interval,
+    start_date: r.startDate,
+    send_time: r.sendTime,
+    timezone: r.timezone,
+    end_date: r.endDate || null,
+    next_run_at: r.nextRunAt ?? null,
+    active: r.active,
+    created_at: r.createdAt,
   }
 }
