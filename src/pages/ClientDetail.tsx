@@ -14,9 +14,9 @@ export default function ClientDetail() {
   if (!client) {
     return (
       <div className="px-4 lg:px-8 py-10">
-        <p className="text-slate-500">Client not found.</p>
+        <p className="text-slate-500">הלקוח לא נמצא.</p>
         <Button className="mt-4" onClick={() => navigate("/clients")}>
-          Back to clients
+          חזרה ללקוחות
         </Button>
       </div>
     )
@@ -32,7 +32,7 @@ export default function ClientDetail() {
         subtitle={client.company}
         actions={
           <Button variant="primary" onClick={() => navigate(`/invoices/new?client=${client.id}`)}>
-            Create Invoice
+            יצירת חשבונית
           </Button>
         }
       />
@@ -40,51 +40,51 @@ export default function ClientDetail() {
       <div className="px-4 lg:px-8 pb-16 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="p-4">
-            <p className="text-xs font-medium text-slate-500">Total invoiced</p>
+            <p className="text-xs font-medium text-slate-500">סך החיובים</p>
             <p className="mt-2 text-xl font-semibold text-slate-900">{formatCurrency(stats.totalInvoiced, business.currency)}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-xs font-medium text-slate-500">Total paid</p>
+            <p className="text-xs font-medium text-slate-500">סך התשלומים</p>
             <p className="mt-2 text-xl font-semibold text-emerald-600">{formatCurrency(stats.totalPaid, business.currency)}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-xs font-medium text-slate-500">Outstanding balance</p>
+            <p className="text-xs font-medium text-slate-500">יתרה פתוחה לתשלום</p>
             <p className="mt-2 text-xl font-semibold text-amber-600">{formatCurrency(stats.outstanding, business.currency)}</p>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">Contact information</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">פרטי קשר</h3>
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="text-xs text-slate-400">Email</dt>
-                <dd className="text-slate-700">{client.email || "—"}</dd>
+                <dt className="text-xs text-slate-400">אימייל</dt>
+                <dd className="text-slate-700"><span dir="ltr">{client.email || "-"}</span></dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Phone</dt>
-                <dd className="text-slate-700">{client.phone || "—"}</dd>
+                <dt className="text-xs text-slate-400">טלפון</dt>
+                <dd className="text-slate-700"><span dir="ltr">{client.phone || "-"}</span></dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Address</dt>
-                <dd className="text-slate-700 whitespace-pre-line">{client.address || "—"}</dd>
+                <dt className="text-xs text-slate-400">כתובת</dt>
+                <dd className="text-slate-700 whitespace-pre-line">{client.address || "-"}</dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-400">Client since</dt>
+                <dt className="text-xs text-slate-400">לקוח מאז</dt>
                 <dd className="text-slate-700">{formatDate(client.createdAt)}</dd>
               </div>
             </dl>
           </Card>
 
           <Card className="lg:col-span-2 p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">Invoice history</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">היסטוריית חשבוניות</h3>
             {invoices.length === 0 ? (
               <EmptyState
-                title="No invoices yet"
-                description="Create the first invoice for this client."
+                title="עדיין אין חשבוניות"
+                description="אפשר ליצור את החשבונית הראשונה ללקוח הזה."
                 action={
                   <Button variant="primary" onClick={() => navigate(`/invoices/new?client=${client.id}`)}>
-                    Create Invoice
+                    יצירת חשבונית
                   </Button>
                 }
               />
@@ -92,11 +92,11 @@ export default function ClientDetail() {
               <div className="overflow-x-auto -mx-5">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-xs text-slate-400 border-b border-slate-100">
-                      <th className="font-medium px-5 py-2">Invoice</th>
-                      <th className="font-medium px-5 py-2">Due</th>
-                      <th className="font-medium px-5 py-2">Amount</th>
-                      <th className="font-medium px-5 py-2">Status</th>
+                    <tr className="text-start text-xs text-slate-400 border-b border-slate-100">
+                      <th className="font-medium px-5 py-2">חשבונית</th>
+                      <th className="font-medium px-5 py-2">תאריך לתשלום</th>
+                      <th className="font-medium px-5 py-2">סכום</th>
+                      <th className="font-medium px-5 py-2">סטטוס</th>
                     </tr>
                   </thead>
                   <tbody>

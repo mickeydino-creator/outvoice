@@ -22,19 +22,19 @@ export default function SignUp() {
     setError(null)
 
     if (!fullName.trim()) {
-      setError("Please enter your full name.")
+      setError("יש להזין שם מלא.")
       return
     }
     if (!/^\S+@\S+\.\S+$/.test(email)) {
-      setError("Please enter a valid email address.")
+      setError("יש להזין כתובת אימייל תקינה.")
       return
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.")
+      setError("הסיסמה צריכה לכלול לפחות 6 תווים.")
       return
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.")
+      setError("הסיסמאות אינן תואמות.")
       return
     }
 
@@ -63,13 +63,13 @@ export default function SignUp() {
     return (
       <AuthShell>
         <div className="text-center">
-          <h1 className="text-xl font-semibold text-slate-900">Check your email</h1>
+          <h1 className="text-xl font-semibold text-slate-900">בדקו את תיבת האימייל</h1>
           <p className="mt-2 text-sm text-slate-500">
-            We sent a confirmation link to <span className="font-medium text-slate-700">{email}</span>. Confirm your
-            address to finish creating your account, then sign in.
+            שלחנו קישור אימות אל <span className="font-medium text-slate-700" dir="ltr">{email}</span>. יש לאשר את
+            הכתובת כדי להשלים את יצירת החשבון, ולאחר מכן להתחבר.
           </p>
           <Link to="/login" className="mt-6 inline-block text-sm font-medium text-blue-600 hover:text-blue-700">
-            Go to sign in
+            מעבר להתחברות
           </Link>
         </div>
       </AuthShell>
@@ -78,22 +78,22 @@ export default function SignUp() {
 
   return (
     <AuthShell>
-      <h1 className="text-xl font-semibold text-slate-900">Create your account</h1>
-      <p className="mt-1 text-sm text-slate-500 mb-6">Start invoicing in minutes.</p>
+      <h1 className="text-xl font-semibold text-slate-900">יצירת חשבון</h1>
+      <p className="mt-1 text-sm text-slate-500 mb-6">מתחילים להפיק חשבוניות תוך דקות.</p>
 
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
-          <Label>Full name</Label>
+          <Label>שם מלא</Label>
           <Input
             autoFocus
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Jane Cooper"
+            placeholder="ישראל ישראלי"
             autoComplete="name"
           />
         </div>
         <div>
-          <Label>Email</Label>
+          <Label>אימייל</Label>
           <Input
             type="email"
             value={email}
@@ -103,22 +103,22 @@ export default function SignUp() {
           />
         </div>
         <div>
-          <Label>Password</Label>
+          <Label>סיסמה</Label>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 6 characters"
+            placeholder="לפחות 6 תווים"
             autoComplete="new-password"
           />
         </div>
         <div>
-          <Label>Confirm password</Label>
+          <Label>אימות סיסמה</Label>
           <Input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Re-enter your password"
+            placeholder="יש להזין את הסיסמה שוב"
             autoComplete="new-password"
           />
         </div>
@@ -126,14 +126,14 @@ export default function SignUp() {
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
         <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
-          {submitting ? "Creating account..." : "Create Account"}
+          {submitting ? "יוצרים חשבון..." : "יצירת חשבון"}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-500">
-        Already have an account?{" "}
+        כבר יש לך חשבון?{" "}
         <Link to="/login" className="font-medium text-blue-600 hover:text-blue-700">
-          Sign In
+          התחברות
         </Link>
       </p>
     </AuthShell>

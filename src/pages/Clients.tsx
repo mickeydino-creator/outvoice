@@ -30,26 +30,26 @@ export default function Clients() {
   return (
     <div>
       <PageHeader
-        title="Clients"
-        subtitle={`${clients.length} clients`}
+        title="לקוחות"
+        subtitle={`${clients.length} לקוחות`}
         actions={
           <Button variant="primary" onClick={() => setShowModal(true)}>
-            + Add Client
+            + הוספת לקוח
           </Button>
         }
       />
 
       <div className="px-4 lg:px-8 pb-10 space-y-4">
         <div className="relative max-w-sm">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input placeholder="Search clients..." value={query} onChange={(e) => setQuery(e.target.value)} className="pl-9" />
+          <SearchIcon className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input placeholder="חיפוש לקוחות..." value={query} onChange={(e) => setQuery(e.target.value)} className="ps-9" />
         </div>
 
         {clients.length === 0 ? (
           <EmptyState
-            title="No clients yet"
-            description="Add your first client to start creating invoices for them."
-            action={<Button variant="primary" onClick={() => setShowModal(true)}>Add a client</Button>}
+            title="עדיין אין לקוחות"
+            description="אחרי הוספת הלקוח הראשון אפשר להתחיל להפיק עבורו חשבוניות."
+            action={<Button variant="primary" onClick={() => setShowModal(true)}>הוספת לקוח</Button>}
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -69,13 +69,13 @@ export default function Clients() {
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <p className="text-slate-400">Invoiced</p>
+                        <p className="text-slate-400">סך החיובים</p>
                         <p className="font-medium text-slate-700 mt-0.5">
                           {formatCurrency(stats.totalInvoiced, business.currency)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-slate-400">Outstanding</p>
+                        <p className="text-slate-400">פתוח לתשלום</p>
                         <p className={`font-medium mt-0.5 ${stats.outstanding > 0 ? "text-amber-600" : "text-slate-700"}`}>
                           {formatCurrency(stats.outstanding, business.currency)}
                         </p>
@@ -94,7 +94,7 @@ export default function Clients() {
           onClose={closeModal}
           onCreate={(data) => {
             addClient(data)
-            showToast(`${data.name} added to clients`)
+            showToast(`${data.name} נוסף/ה ללקוחות`)
             closeModal()
           }}
         />
@@ -115,8 +115,8 @@ function AddClientModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 animate-fade-in">
       <Card className="w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-slate-900">Add client</h3>
-        <p className="text-sm text-slate-500 mt-1 mb-5">Just the basics — you can add more details later.</p>
+        <h3 className="text-lg font-semibold text-slate-900">הוספת לקוח</h3>
+        <p className="text-sm text-slate-500 mt-1 mb-5">רק הפרטים הבסיסיים - אפשר להוסיף פרטים נוספים בהמשך.</p>
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -126,33 +126,33 @@ function AddClientModal({
           }}
         >
           <div>
-            <Label>Full name</Label>
-            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Jane Cooper" />
+            <Label>שם מלא</Label>
+            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="ישראל ישראלי" />
           </div>
           <div>
-            <Label>Company</Label>
-            <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="Acme Studio" />
+            <Label>חברה</Label>
+            <Input value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} placeholder="סטודיו לדוגמה" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Email</Label>
-              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="jane@acme.com" />
+              <Label>אימייל</Label>
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="israel@example.co.il" />
             </div>
             <div>
-              <Label>Phone</Label>
-              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1 555 0100" />
+              <Label>טלפון</Label>
+              <Input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="050-1234567" />
             </div>
           </div>
           <div>
-            <Label>Address</Label>
-            <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, City" />
+            <Label>כתובת</Label>
+            <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="רחוב הרצל 1, תל אביב" />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={onClose}>
-              Cancel
+              ביטול
             </Button>
             <Button type="submit" variant="primary">
-              Add client
+              הוספת לקוח
             </Button>
           </div>
         </form>

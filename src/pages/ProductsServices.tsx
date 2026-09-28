@@ -12,20 +12,20 @@ export default function ProductsServices() {
   const [editing, setEditing] = useState<Product | "new" | null>(null)
 
   function handleDelete(product: Product) {
-    if (confirm(`Delete "${product.name}"?`)) {
+    if (confirm(`למחוק את ״${product.name}״?`)) {
       deleteProduct(product.id)
-      showToast("Item deleted", "info")
+      showToast("הפריט נמחק", "info")
     }
   }
 
   return (
     <div>
       <PageHeader
-        title="Products & Services"
-        subtitle="Save items you bill often so you can add them to invoices in one click."
+        title="מוצרים ושירותים"
+        subtitle="שמירת פריטים שחוזרים על עצמם מאפשרת להוסיף אותם לחשבוניות בלחיצה אחת."
         actions={
           <Button variant="primary" onClick={() => setEditing("new")}>
-            + Add item
+            + הוספת פריט
           </Button>
         }
       />
@@ -33,11 +33,11 @@ export default function ProductsServices() {
       <div className="px-4 lg:px-8 pb-10">
         {products.length === 0 ? (
           <EmptyState
-            title="No products or services yet"
-            description="Add your most common line items to speed up invoice creation."
+            title="עדיין אין מוצרים או שירותים"
+            description="הוספת הפריטים הנפוצים ביותר מזרזת את הפקת החשבוניות."
             action={
               <Button variant="primary" onClick={() => setEditing("new")}>
-                Add your first item
+                הוספת הפריט הראשון
               </Button>
             }
           />
@@ -51,15 +51,15 @@ export default function ProductsServices() {
                     {formatCurrency(product.price, business.currency)}
                   </span>
                 </div>
-                <p className="mt-1.5 text-sm text-slate-500 flex-1">{product.description || "No description"}</p>
+                <p className="mt-1.5 text-sm text-slate-500 flex-1">{product.description || "אין תיאור"}</p>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Tax rate: {product.taxRate}%</span>
+                  <span className="text-xs text-slate-400">שיעור מע״מ: {product.taxRate}%</span>
                   <div className="flex gap-2">
                     <button onClick={() => setEditing(product)} className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                      Edit
+                      עריכה
                     </button>
                     <button onClick={() => handleDelete(product)} className="text-xs font-medium text-slate-400 hover:text-red-500">
-                      Delete
+                      מחיקה
                     </button>
                   </div>
                 </div>
@@ -76,10 +76,10 @@ export default function ProductsServices() {
           onSave={(data) => {
             if (editing === "new") {
               addProduct(data)
-              showToast("Item added")
+              showToast("הפריט נוסף")
             } else {
               updateProduct(editing.id, data)
-              showToast("Item updated")
+              showToast("הפריט עודכן")
             }
             setEditing(null)
           }}
@@ -108,8 +108,8 @@ function ProductModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 animate-fade-in">
       <Card className="w-full max-w-md p-6">
-        <h3 className="text-lg font-semibold text-slate-900">{product ? "Edit item" : "Add item"}</h3>
-        <p className="text-sm text-slate-500 mt-1 mb-5">Selectable when adding line items to an invoice or quote.</p>
+        <h3 className="text-lg font-semibold text-slate-900">{product ? "עריכת פריט" : "הוספת פריט"}</h3>
+        <p className="text-sm text-slate-500 mt-1 mb-5">אפשר לבחור בפריט בעת הוספת שורות לחשבונית או להצעת מחיר.</p>
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -119,29 +119,29 @@ function ProductModal({
           }}
         >
           <div>
-            <Label>Name</Label>
-            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Logo design package" />
+            <Label>שם</Label>
+            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="חבילת עיצוב לוגו" />
           </div>
           <div>
-            <Label>Description</Label>
-            <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description shown on invoices" />
+            <Label>תיאור</Label>
+            <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="תיאור קצר שיופיע בחשבוניות" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Price</Label>
+              <Label>מחיר</Label>
               <Input type="number" min={0} value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
             </div>
             <div>
-              <Label>Tax rate (%)</Label>
+              <Label>שיעור מע״מ (%)</Label>
               <Input type="number" min={0} value={form.taxRate} onChange={(e) => setForm({ ...form, taxRate: Number(e.target.value) })} />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="secondary" onClick={onClose}>
-              Cancel
+              ביטול
             </Button>
             <Button type="submit" variant="primary">
-              Save item
+              שמירת פריט
             </Button>
           </div>
         </form>

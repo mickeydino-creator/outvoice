@@ -4,14 +4,14 @@ import { useData } from "../store/DataContext"
 import { useAuth } from "../store/AuthContext"
 
 const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: DashboardIcon, end: true },
-  { to: "/invoices", label: "Invoices", icon: InvoiceIcon },
-  { to: "/quotes", label: "Quotes", icon: QuoteIcon },
-  { to: "/clients", label: "Clients", icon: ClientsIcon },
-  { to: "/products", label: "Products & Services", icon: ProductIcon },
-  { to: "/payments", label: "Payments", icon: PaymentIcon },
-  { to: "/reports", label: "Reports", icon: ReportIcon },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
+  { to: "/dashboard", label: "לוח בקרה", icon: DashboardIcon, end: true },
+  { to: "/invoices", label: "חשבוניות", icon: InvoiceIcon },
+  { to: "/quotes", label: "הצעות מחיר", icon: QuoteIcon },
+  { to: "/clients", label: "לקוחות", icon: ClientsIcon },
+  { to: "/products", label: "מוצרים ושירותים", icon: ProductIcon },
+  { to: "/payments", label: "תשלומים", icon: PaymentIcon },
+  { to: "/reports", label: "דוחות", icon: ReportIcon },
+  { to: "/settings", label: "הגדרות", icon: SettingsIcon },
 ]
 
 const mobilePrimary = navItems.slice(0, 3)
@@ -30,7 +30,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-slate-50 lg:flex">
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-slate-200 bg-white">
+      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:start-0 border-e border-slate-200 bg-white">
         <div className="flex items-center px-6 h-16 border-b border-slate-100">
           <img src="/logo.jpg" alt="Invoxa" className="h-8 w-auto" />
         </div>
@@ -54,8 +54,8 @@ export default function Layout() {
         </nav>
 
         <div className="mx-3 mb-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
-          <p className="text-xs font-semibold text-blue-700">Free plan</p>
-          <p className="mt-1 text-xs text-slate-500">3 of 5 invoices used this month.</p>
+          <p className="text-xs font-semibold text-blue-700">תוכנית חינמית</p>
+          <p className="mt-1 text-xs text-slate-500">נוצלו 3 מתוך 5 חשבוניות החודש.</p>
           <div className="mt-2 h-1.5 w-full rounded-full bg-blue-100">
             <div className="h-1.5 w-3/5 rounded-full bg-blue-600" />
           </div>
@@ -63,7 +63,7 @@ export default function Layout() {
             onClick={() => navigate("/settings?upgrade=1")}
             className="mt-3 w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
           >
-            Upgrade to Pro
+            שדרוג ל-Pro
           </button>
         </div>
 
@@ -81,8 +81,8 @@ export default function Layout() {
           </div>
           <button
             onClick={handleSignOut}
-            aria-label="Sign out"
-            title="Sign out"
+            aria-label="התנתקות"
+            title="התנתקות"
             className="shrink-0 text-slate-400 hover:text-red-500 transition-colors"
           >
             <LogoutIcon />
@@ -90,7 +90,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <div className="flex-1 lg:ml-64 pb-20 lg:pb-0">
+      <div className="flex-1 lg:ms-64 pb-20 lg:pb-0">
         <Outlet />
       </div>
 
@@ -119,7 +119,7 @@ export default function Layout() {
             className="flex flex-col items-center justify-center gap-1 min-h-[52px] py-2.5 text-xs font-medium text-slate-500 active:bg-slate-50 transition-colors"
           >
             <MoreIcon className="h-5 w-5" />
-            More
+            עוד
           </button>
         </div>
       </nav>
@@ -161,7 +161,7 @@ export default function Layout() {
                 className="flex flex-col items-center justify-center gap-2 rounded-xl px-2 py-4 min-h-[76px] text-xs font-medium text-red-500 bg-red-50 active:scale-[0.97] transition-all"
               >
                 <LogoutIcon className="h-5 w-5" />
-                <span className="text-center leading-tight">Sign out</span>
+                <span className="text-center leading-tight">התנתקות</span>
               </button>
             </div>
           </div>
@@ -260,7 +260,7 @@ function MoreIcon({ className }: { className?: string }) {
 
 function LogoutIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg className={`${className ?? ""} rtl:-scale-x-100`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
       <path d="M16 17l5-5-5-5" />
       <path d="M21 12H9" />

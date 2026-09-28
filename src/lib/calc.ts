@@ -19,7 +19,7 @@ export function invoiceTotal(invoice: Pick<Invoice, "items" | "discount">) {
 }
 
 export function formatCurrency(amount: number, currency = "USD") {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("he-IL", {
     style: "currency",
     currency,
     minimumFractionDigits: 2,
@@ -29,7 +29,20 @@ export function formatCurrency(amount: number, currency = "USD") {
 
 export function formatDate(iso: string) {
   const d = new Date(iso)
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+  return d.toLocaleDateString("he-IL", { year: "numeric", month: "short", day: "numeric" })
+}
+
+// Payment terms are stored as their original English values; this maps them for display.
+const PAYMENT_TERMS_LABELS: Record<string, string> = {
+  "Due on receipt": "לתשלום מיידי",
+  "Net 7": "שוטף + 7",
+  "Net 14": "שוטף + 14",
+  "Net 30": "שוטף + 30",
+  "Net 60": "שוטף + 60",
+}
+
+export function paymentTermsLabel(value: string) {
+  return PAYMENT_TERMS_LABELS[value] ?? value
 }
 
 export function isOverdue(invoice: Invoice) {

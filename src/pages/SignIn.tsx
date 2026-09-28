@@ -20,7 +20,7 @@ export default function SignIn() {
     setError(null)
 
     if (!email.trim() || !password) {
-      setError("Please enter your email and password.")
+      setError("יש להזין אימייל וסיסמה.")
       return
     }
 
@@ -38,12 +38,12 @@ export default function SignIn() {
 
   return (
     <AuthShell>
-      <h1 className="text-xl font-semibold text-slate-900">Sign in</h1>
-      <p className="mt-1 text-sm text-slate-500 mb-6">Welcome back — pick up where you left off.</p>
+      <h1 className="text-xl font-semibold text-slate-900">התחברות</h1>
+      <p className="mt-1 text-sm text-slate-500 mb-6">ברוכים השבים - אפשר להמשיך מאיפה שעצרתם.</p>
 
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
-          <Label>Email</Label>
+          <Label>אימייל</Label>
           <Input
             autoFocus
             type="email"
@@ -54,12 +54,12 @@ export default function SignIn() {
           />
         </div>
         <div>
-          <Label>Password</Label>
+          <Label>סיסמה</Label>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Your password"
+            placeholder="הסיסמה שלך"
             autoComplete="current-password"
           />
         </div>
@@ -67,14 +67,14 @@ export default function SignIn() {
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
         <Button type="submit" variant="primary" className="w-full" disabled={submitting}>
-          {submitting ? "Signing in..." : "Sign In"}
+          {submitting ? "מתחברים..." : "התחברות"}
         </Button>
       </form>
 
       <p className="mt-6 text-center text-sm text-slate-500">
-        Don't have an account?{" "}
+        אין לך חשבון?{" "}
         <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-700">
-          Create one
+          להרשמה
         </Link>
       </p>
     </AuthShell>

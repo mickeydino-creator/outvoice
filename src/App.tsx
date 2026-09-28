@@ -49,11 +49,11 @@ function SupabaseSetupNotice() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm text-center">
-        <h1 className="text-lg font-semibold text-slate-900">Supabase is not configured</h1>
+        <h1 className="text-lg font-semibold text-slate-900">Supabase לא מוגדר</h1>
         <p className="mt-2 text-sm text-slate-500">
-          Set <code className="rounded bg-slate-100 px-1.5 py-0.5">VITE_SUPABASE_URL</code> and{" "}
-          <code className="rounded bg-slate-100 px-1.5 py-0.5">VITE_SUPABASE_ANON_KEY</code> in your environment
-          (see <code className="rounded bg-slate-100 px-1.5 py-0.5">.env.example</code>) and reload.
+          יש להגדיר את <code className="rounded bg-slate-100 px-1.5 py-0.5">VITE_SUPABASE_URL</code> ואת{" "}
+          <code className="rounded bg-slate-100 px-1.5 py-0.5">VITE_SUPABASE_ANON_KEY</code> בסביבה (ראו{" "}
+          <code className="rounded bg-slate-100 px-1.5 py-0.5">.env.example</code>) ולטעון מחדש.
         </p>
       </div>
     </div>

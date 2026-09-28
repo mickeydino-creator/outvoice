@@ -44,7 +44,7 @@ export async function sendResendEmail(
   const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    return { ok: false, status: response.status, error: data.message ?? "Failed to send email" }
+    return { ok: false, status: response.status, error: data.message ?? "שליחת האימייל נכשלה" }
   }
 
   return { ok: true, status: response.status, id: data.id }

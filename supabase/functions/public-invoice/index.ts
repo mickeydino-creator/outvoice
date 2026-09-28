@@ -29,18 +29,18 @@ function json(body: unknown, status = 200) {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405)
+  if (req.method !== "POST") return json({ error: "שיטת הבקשה אינה נתמכת" }, 405)
 
   let body: { invoiceId?: string }
   try {
     body = await req.json()
   } catch {
-    return json({ error: "Invalid JSON body" }, 400)
+    return json({ error: "גוף הבקשה אינו תקין" }, 400)
   }
 
   const { invoiceId } = body
   if (!invoiceId || typeof invoiceId !== "string") {
-    return json({ error: "Missing invoiceId" }, 400)
+    return json({ error: "חסר מזהה חשבונית" }, 400)
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } })
@@ -51,8 +51,8 @@ Deno.serve(async (req: Request) => {
     .eq("id", invoiceId)
     .maybeSingle()
 
-  if (invoiceError) return json({ error: "Failed to load invoice" }, 500)
-  if (!invoice) return json({ error: "Invoice not found" }, 404)
+  if (invoiceError) return json({ error: "טעינת החשבונית נכשלה" }, 500)
+  if (!invoice) return json({ error: "החשבונית לא נמצאה" }, 404)
 
   const [{ data: client }, { data: business }, { data: templateRow }] = await Promise.all([
     admin.from("clients").select("*").eq("id", invoice.client_id).maybeSingle(),

@@ -16,7 +16,12 @@ async function invokePublicQuote(action: "get" | "approve" | "decline", quoteId:
   })
 
   if (error) {
-    throw new Error(await extractFunctionErrorMessage(error, error.message))
+    throw new Error(await extractFunctionErrorMessage(
+        error,
+        action === "get"
+          ? "טעינת הצעת המחיר נכשלה. אפשר לנסות שוב בעוד רגע."
+          : "שליחת התשובה להצעת המחיר נכשלה. אפשר לנסות שוב בעוד רגע."
+      ))
   }
 
   if (data?.error) throw new Error(data.error)

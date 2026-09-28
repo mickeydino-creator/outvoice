@@ -11,7 +11,7 @@ export async function sendEmail(to: string, subject: string, html: string, attac
     body: { to, subject, html, attachments },
   })
   if (error) {
-    throw new Error(await extractFunctionErrorMessage(error, error.message))
+    throw new Error(await extractFunctionErrorMessage(error, "שליחת האימייל נכשלה. אפשר לנסות שוב בעוד רגע."))
   }
   return data as { success: boolean; id?: string }
 }

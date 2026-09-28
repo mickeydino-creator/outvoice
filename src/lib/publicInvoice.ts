@@ -16,7 +16,7 @@ export async function fetchPublicInvoice(invoiceId: string): Promise<PublicInvoi
   })
 
   if (error) {
-    throw new Error(await extractFunctionErrorMessage(error, error.message))
+    throw new Error(await extractFunctionErrorMessage(error, "טעינת החשבונית נכשלה. אפשר לנסות שוב בעוד רגע."))
   }
 
   if (data?.error) throw new Error(data.error)

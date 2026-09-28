@@ -24,9 +24,9 @@ export default function InvoiceView() {
   if (!invoice) {
     return (
       <div className="px-4 lg:px-8 py-10">
-        <p className="text-slate-500">Invoice not found.</p>
+        <p className="text-slate-500">החשבונית לא נמצאה.</p>
         <Button className="mt-4" onClick={() => navigate("/invoices")}>
-          Back to invoices
+          חזרה לחשבוניות
         </Button>
       </div>
     )
@@ -39,16 +39,16 @@ export default function InvoiceView() {
   async function handleSend() {
     if (!invoice) return
     if (!client?.email) {
-      showToast("This client has no email address on file", "error")
+      showToast("ללקוח זה לא שמורה כתובת אימייל", "error")
       return
     }
     setSending(true)
     try {
       await sendInvoiceByEmail(invoice, client, business)
       markInvoiceStatus(invoice.id, "sent")
-      showToast(`Invoice ${invoice.number} sent to ${client.email}`)
+      showToast(`חשבונית ${invoice.number} נשלחה אל ${client.email}`)
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to send invoice", "error")
+      showToast(err instanceof Error ? err.message : "שליחת החשבונית נכשלה", "error")
     } finally {
       setSending(false)
     }
@@ -59,9 +59,9 @@ export default function InvoiceView() {
     setReminding(true)
     try {
       await sendInvoiceReminder(invoice, client, business)
-      showToast(`Reminder sent to ${client.email}`)
+      showToast(`תזכורת נשלחה אל ${client.email}`)
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to send reminder", "error")
+      showToast(err instanceof Error ? err.message : "שליחת התזכורת נכשלה", "error")
     } finally {
       setReminding(false)
     }
@@ -70,14 +70,14 @@ export default function InvoiceView() {
   function handleMarkPaid() {
     if (!invoice) return
     markInvoiceStatus(invoice.id, "paid")
-    showToast(`Marked ${invoice.number} as paid`)
+    showToast(`חשבונית ${invoice.number} סומנה כשולמה`)
   }
 
   function handleDuplicate() {
     if (!invoice) return
     const copy = duplicateInvoice(invoice.id)
     if (copy) {
-      showToast(`Duplicated as ${copy.number}`)
+      showToast(`נוצר עותק: ${copy.number}`)
       navigate(`/invoices/${copy.id}/edit`)
     }
   }
@@ -87,9 +87,9 @@ export default function InvoiceView() {
     setDownloading(true)
     try {
       const html = renderInvoiceTemplate(templates.invoiceHtml, invoice, client, business)
-      await downloadHtmlAsPdf(html, `Invoice-${invoice.number}.pdf`)
+      await downloadHtmlAsPdf(html, `חשבונית-${invoice.number}.pdf`)
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to generate PDF", "error")
+      showToast(err instanceof Error ? err.message : "יצירת קובץ ה-PDF נכשלה", "error")
     } finally {
       setDownloading(false)
     }
@@ -97,9 +97,9 @@ export default function InvoiceView() {
 
   function handleDelete() {
     if (!invoice) return
-    if (confirm(`Delete invoice ${invoice.number}? This cannot be undone.`)) {
+    if (confirm(`למחוק את חשבונית ${invoice.number}? לא ניתן לבטל פעולה זו.`)) {
       deleteInvoice(invoice.id)
-      showToast("Invoice deleted", "info")
+      showToast("החשבונית נמחקה", "info")
       navigate("/invoices")
     }
   }
@@ -109,39 +109,39 @@ export default function InvoiceView() {
   function handleCopyLink() {
     navigator.clipboard
       .writeText(publicUrl)
-      .then(() => showToast("Public link copied"))
-      .catch(() => showToast("Couldn't copy link", "error"))
+      .then(() => showToast("הקישור ללקוח הועתק"))
+      .catch(() => showToast("לא ניתן להעתיק את הקישור", "error"))
   }
 
   return (
     <div>
       <PageHeader
         title={invoice.number}
-        subtitle={client ? `${client.name} — ${client.company}` : "No client"}
+        subtitle={client ? `${client.name}${client.company ? ` - ${client.company}` : ""}` : "ללא לקוח"}
         actions={
           <>
             <StatusBadge status={status} />
             <Button variant="secondary" onClick={() => navigate(`/invoices/${invoice.id}/edit`)}>
-              Edit
+              עריכה
             </Button>
             <Button variant="secondary" onClick={handleDuplicate}>
-              Duplicate
+              שכפול
             </Button>
             <Button variant="secondary" onClick={handleDownload} disabled={downloading}>
-              {downloading ? "Preparing..." : "Download PDF"}
+              {downloading ? "בהכנה..." : "הורדת PDF"}
             </Button>
             {status === "draft" && (
               <Button variant="primary" onClick={handleSend} disabled={sending}>
-                {sending ? "Sending..." : "Send invoice"}
+                {sending ? "בשליחה..." : "שליחת חשבונית"}
               </Button>
             )}
             {(status === "sent" || status === "overdue") && (
               <>
                 <Button variant="secondary" onClick={handleRemind} disabled={reminding}>
-                  {reminding ? "Sending..." : "Remind client"}
+                  {reminding ? "בשליחה..." : "שליחת תזכורת"}
                 </Button>
                 <Button variant="primary" onClick={handleMarkPaid}>
-                  Mark as paid
+                  סימון כשולמה
                 </Button>
               </>
             )}
@@ -152,9 +152,9 @@ export default function InvoiceView() {
       <div className="px-4 lg:px-8 pb-16">
         {sourceQuote && (
           <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-700">
-            Created from{" "}
+            נוצרה מתוך{" "}
             <button className="font-medium underline" onClick={() => navigate(`/quotes/${sourceQuote.id}`)}>
-              quote {sourceQuote.number}
+              הצעת מחיר {sourceQuote.number}
             </button>
             .
           </div>
@@ -162,17 +162,17 @@ export default function InvoiceView() {
         {status !== "draft" && (
           <div className="max-w-3xl mx-auto mb-4 flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
             <p className="flex-1 truncate text-xs text-slate-500">
-              Public link: <span className="text-slate-700">{publicUrl}</span>
+              קישור ללקוח: <span className="text-slate-700">{publicUrl}</span>
             </p>
             <Button size="sm" variant="secondary" onClick={handleCopyLink}>
-              Copy link
+              העתקת קישור
             </Button>
           </div>
         )}
         <InvoiceDocument invoice={invoice} client={client} business={business} />
         <div className="max-w-3xl mx-auto mt-4 flex justify-end">
           <button onClick={handleDelete} className="text-xs text-slate-400 hover:text-red-500">
-            Delete invoice
+            מחיקת החשבונית
           </button>
         </div>
       </div>

@@ -14,6 +14,23 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+// Supabase returns auth errors in English; map the common ones to Hebrew
+// before they reach the UI.
+function translateAuthError(message: string | undefined | null): string | null {
+  if (!message) return null
+  const m = message.toLowerCase()
+  if (m.includes("invalid login credentials")) return "האימייל או הסיסמה שגויים."
+  if (m.includes("email not confirmed")) return "כתובת האימייל עדיין לא אומתה. יש לבדוק את תיבת הדואר."
+  if (m.includes("already registered") || m.includes("already been registered") || m.includes("user already exists"))
+    return "כבר קיים חשבון עם כתובת האימייל הזו."
+  if (m.includes("password should be at least")) return "הסיסמה צריכה לכלול לפחות 6 תווים."
+  if (m.includes("invalid email") || m.includes("unable to validate email")) return "כתובת האימייל אינה תקינה."
+  if (m.includes("rate limit") || m.includes("too many requests") || m.includes("for security purposes"))
+    return "בוצעו יותר מדי ניסיונות. אפשר לנסות שוב בעוד כמה דקות."
+  if (m.includes("failed to fetch") || m.includes("network")) return "אין חיבור לשרת. יש לבדוק את החיבור לאינטרנט."
+  return "משהו השתבש. אפשר לנסות שוב."
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
@@ -44,12 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: { data: { full_name: fullName } },
     })
-    return { error: error?.message ?? null, needsEmailConfirmation: !error && !data.session }
+    return { error: translateAuthError(error?.message), needsEmailConfirmation: !error && !data.session }
   }
 
   async function signIn({ email, password }: { email: string; password: string }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
+    return { error: translateAuthError(error?.message) }
   }
 
   async function signOut() {
@@ -60,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/login`,
     })
-    return { error: error?.message ?? null }
+    return { error: translateAuthError(error?.message) }
   }
 
   const value = useMemo<AuthContextValue>(

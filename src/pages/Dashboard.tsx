@@ -38,7 +38,7 @@ export default function Dashboard() {
     const now = new Date()
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const label = d.toLocaleDateString("en-US", { month: "short" })
+      const label = d.toLocaleDateString("he-IL", { month: "short" })
       const monthRevenue = invoices
         .filter((inv) => {
           if (effectiveStatus(inv) !== "paid" || !inv.paidAt) return false
@@ -63,8 +63,8 @@ export default function Dashboard() {
     const events: { id: string; text: string; time: string }[] = []
     for (const inv of invoices) {
       const client = clients.find((c) => c.id === inv.clientId)
-      if (inv.paidAt) events.push({ id: `${inv.id}-paid`, text: `${client?.name ?? "Client"} paid ${inv.number}`, time: inv.paidAt })
-      if (inv.sentAt) events.push({ id: `${inv.id}-sent`, text: `Sent ${inv.number} to ${client?.name ?? "client"}`, time: inv.sentAt })
+      if (inv.paidAt) events.push({ id: `${inv.id}-paid`, text: `התקבל תשלום עבור ${inv.number} מ${client?.name ? `-${client.name}` : "הלקוח"}`, time: inv.paidAt })
+      if (inv.sentAt) events.push({ id: `${inv.id}-sent`, text: `${inv.number} נשלחה אל ${client?.name ?? "הלקוח"}`, time: inv.sentAt })
     }
     return events.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 6)
   }, [invoices, clients])
@@ -72,18 +72,18 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader
-        title={`Welcome back${business.name ? "" : ""}`}
-        subtitle="Here's how your business is doing."
+        title="ברוכים השבים"
+        subtitle="תמונת מצב של העסק שלך."
         actions={
           <div className="flex gap-2">
             <Link to="/clients?new=1" data-tutorial="action-add-client">
-              <ActionButton label="Add Client" variant="secondary" />
+              <ActionButton label="הוספת לקוח" variant="secondary" />
             </Link>
             <Link to="/quotes/new" data-tutorial="action-create-quote">
-              <ActionButton label="Create Quote" variant="secondary" />
+              <ActionButton label="יצירת הצעת מחיר" variant="secondary" />
             </Link>
             <Link to="/invoices/new" data-tutorial="action-create-invoice">
-              <ActionButton label="Create Invoice" variant="primary" />
+              <ActionButton label="יצירת חשבונית" variant="primary" />
             </Link>
           </div>
         }
@@ -91,20 +91,20 @@ export default function Dashboard() {
 
       <div className="px-4 lg:px-8 pb-10 space-y-6">
         <div data-tutorial="dashboard-overview" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total revenue" value={formatCurrency(stats.totalRevenue, business.currency)} tone="ink" />
-          <StatCard label="Outstanding" value={formatCurrency(stats.outstanding, business.currency)} tone="blue" />
-          <StatCard label="Overdue" value={formatCurrency(stats.overdue, business.currency)} tone="red" />
-          <StatCard label="Paid this month" value={formatCurrency(stats.paidThisMonth, business.currency)} tone="green" />
+          <StatCard label="סך ההכנסות" value={formatCurrency(stats.totalRevenue, business.currency)} tone="ink" />
+          <StatCard label="פתוח לתשלום" value={formatCurrency(stats.outstanding, business.currency)} tone="blue" />
+          <StatCard label="באיחור" value={formatCurrency(stats.overdue, business.currency)} tone="red" />
+          <StatCard label="שולם החודש" value={formatCurrency(stats.paidThisMonth, business.currency)} tone="green" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-800">Revenue, last 6 months</h3>
+              <h3 className="text-sm font-semibold text-slate-800">הכנסות ב-6 החודשים האחרונים</h3>
             </div>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 0, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#2563EB" stopOpacity={0.25} />
@@ -112,12 +112,15 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#64748B", fontSize: 12 }} />
+                  <XAxis dataKey="label" reversed tickLine={false} axisLine={false} tick={{ fill: "#64748B", fontSize: 12 }} />
                   <YAxis
+                    orientation="right"
                     tickLine={false}
                     axisLine={false}
                     tick={{ fill: "#64748B", fontSize: 12 }}
-                    tickFormatter={(v) => `$${v / 1000}k`}
+                    tickFormatter={(v) =>
+                      new Intl.NumberFormat("he-IL", { style: "currency", currency: business.currency || "ILS", notation: "compact", maximumFractionDigits: 1 }).format(Number(v))
+                    }
                   />
                   <Tooltip
                     formatter={(value) => formatCurrency(Number(value), business.currency)}
@@ -130,9 +133,9 @@ export default function Dashboard() {
           </Card>
 
           <Card className="p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">Recent activity</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">פעילות אחרונה</h3>
             {activity.length === 0 ? (
-              <p className="text-sm text-slate-400">No activity yet.</p>
+              <p className="text-sm text-slate-400">אין פעילות עדיין.</p>
             ) : (
               <ul className="space-y-4">
                 {activity.map((event) => (
@@ -151,20 +154,20 @@ export default function Dashboard() {
 
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-800">Recent invoices</h3>
+            <h3 className="text-sm font-semibold text-slate-800">חשבוניות אחרונות</h3>
             <Link to="/invoices" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-              View all
+              לכל הרשימה
             </Link>
           </div>
           <div className="overflow-x-auto -mx-5">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-400 border-b border-slate-100">
-                  <th className="font-medium px-5 py-2">Invoice</th>
-                  <th className="font-medium px-5 py-2">Client</th>
-                  <th className="font-medium px-5 py-2">Due date</th>
-                  <th className="font-medium px-5 py-2">Amount</th>
-                  <th className="font-medium px-5 py-2">Status</th>
+                <tr className="text-start text-xs text-slate-400 border-b border-slate-100">
+                  <th className="font-medium px-5 py-2">חשבונית</th>
+                  <th className="font-medium px-5 py-2">לקוח</th>
+                  <th className="font-medium px-5 py-2">תאריך לתשלום</th>
+                  <th className="font-medium px-5 py-2">סכום</th>
+                  <th className="font-medium px-5 py-2">סטטוס</th>
                 </tr>
               </thead>
               <tbody>
@@ -180,7 +183,7 @@ export default function Dashboard() {
                           {inv.number}
                         </Link>
                       </td>
-                      <td className="px-5 py-3 text-slate-600">{client?.name ?? "—"}</td>
+                      <td className="px-5 py-3 text-slate-600">{client?.name ?? "-"}</td>
                       <td className="px-5 py-3 text-slate-500">{formatDate(inv.dueDate)}</td>
                       <td className="px-5 py-3 font-medium text-slate-800">
                         {formatCurrency(invoiceTotal(inv), business.currency)}
@@ -199,21 +202,21 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-800">Quotes awaiting approval</h3>
+              <h3 className="text-sm font-semibold text-slate-800">הצעות מחיר שממתינות לאישור</h3>
               <Link to="/quotes" className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                View all
+                לכל הרשימה
               </Link>
             </div>
             {quotesAwaitingApproval.length === 0 ? (
-              <p className="text-sm text-slate-400">Nothing waiting on a client right now.</p>
+              <p className="text-sm text-slate-400">אין כרגע הצעות שממתינות ללקוח.</p>
             ) : (
               <ul className="space-y-3">
                 {quotesAwaitingApproval.slice(0, 5).map((q) => {
                   const client = clients.find((c) => c.id === q.clientId)
                   return (
                     <li key={q.id} className="flex items-center justify-between text-sm">
-                      <Link to={`/quotes/${q.id}`} className="text-slate-700 hover:text-blue-600 truncate pr-2">
-                        {q.number} — {client?.name ?? "—"}
+                      <Link to={`/quotes/${q.id}`} className="text-slate-700 hover:text-blue-600 truncate pe-2">
+                        {q.number} - {client?.name ?? "-"}
                       </Link>
                       <QuoteStatusBadge status={q.status} />
                     </li>
@@ -225,23 +228,23 @@ export default function Dashboard() {
 
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-800">Approved quotes</h3>
+              <h3 className="text-sm font-semibold text-slate-800">הצעות מחיר שאושרו</h3>
               <Link to="/quotes" className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                View all
+                לכל הרשימה
               </Link>
             </div>
             {approvedQuotes.length === 0 ? (
-              <p className="text-sm text-slate-400">No quotes approved yet.</p>
+              <p className="text-sm text-slate-400">עדיין לא אושרו הצעות מחיר.</p>
             ) : (
               <ul className="space-y-3">
                 {approvedQuotes.slice(0, 5).map((q) => {
                   const client = clients.find((c) => c.id === q.clientId)
                   return (
                     <li key={q.id} className="flex items-center justify-between text-sm">
-                      <Link to={`/quotes/${q.id}`} className="text-slate-700 hover:text-blue-600 truncate pr-2">
-                        {q.number} — {client?.name ?? "—"}
+                      <Link to={`/quotes/${q.id}`} className="text-slate-700 hover:text-blue-600 truncate pe-2">
+                        {q.number} - {client?.name ?? "-"}
                       </Link>
-                      <span className="text-xs font-medium text-emerald-600">Ready to convert</span>
+                      <span className="text-xs font-medium text-emerald-600">מוכנה להמרה</span>
                     </li>
                   )
                 })}
@@ -251,21 +254,21 @@ export default function Dashboard() {
 
           <Card className="p-5">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-800">Overdue invoices</h3>
+              <h3 className="text-sm font-semibold text-slate-800">חשבוניות באיחור</h3>
               <Link to="/invoices" className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                View all
+                לכל הרשימה
               </Link>
             </div>
             {overdueInvoices.length === 0 ? (
-              <p className="text-sm text-slate-400">Nothing overdue. Nice work.</p>
+              <p className="text-sm text-slate-400">אין חשבוניות באיחור. כל הכבוד.</p>
             ) : (
               <ul className="space-y-3">
                 {overdueInvoices.slice(0, 5).map((inv) => {
                   const client = clients.find((c) => c.id === inv.clientId)
                   return (
                     <li key={inv.id} className="flex items-center justify-between text-sm">
-                      <Link to={`/invoices/${inv.id}`} className="text-slate-700 hover:text-blue-600 truncate pr-2">
-                        {inv.number} — {client?.name ?? "—"}
+                      <Link to={`/invoices/${inv.id}`} className="text-slate-700 hover:text-blue-600 truncate pe-2">
+                        {inv.number} - {client?.name ?? "-"}
                       </Link>
                       <span className="text-xs font-medium text-red-600">{formatCurrency(invoiceTotal(inv), business.currency)}</span>
                     </li>
@@ -278,19 +281,19 @@ export default function Dashboard() {
 
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-slate-800">Recent reminders</h3>
+            <h3 className="text-sm font-semibold text-slate-800">תזכורות אחרונות</h3>
             <Link to="/settings" className="text-xs font-medium text-blue-600 hover:text-blue-700">
-              Manage reminders
+              ניהול תזכורות
             </Link>
           </div>
           {reminderLog.length === 0 ? (
-            <p className="text-sm text-slate-400">No reminders sent yet.</p>
+            <p className="text-sm text-slate-400">עדיין לא נשלחו תזכורות.</p>
           ) : (
             <ul className="space-y-3">
               {reminderLog.slice(0, 5).map((entry) => (
                 <li key={entry.id} className="flex items-center justify-between text-sm">
                   <span className="text-slate-700">
-                    {entry.invoiceNumber} — {entry.clientName}
+                    {entry.invoiceNumber} - {entry.clientName}
                   </span>
                   <span className="text-xs text-slate-400">{formatDate(entry.sentAt)}</span>
                 </li>

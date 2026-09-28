@@ -30,9 +30,14 @@ export function Button({ variant = "secondary", size = "md", className = "", chi
   )
 }
 
-export function Input({ className = "", ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+const LTR_INPUT_TYPES = new Set(["email", "url", "tel", "number"])
+
+export function Input({ className = "", dir, type, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+  const resolvedDir = dir ?? (type && LTR_INPUT_TYPES.has(type) ? "ltr" : undefined)
   return (
     <input
+      type={type}
+      dir={resolvedDir}
       className={`w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-shadow focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${className}`}
       {...rest}
     />
@@ -71,10 +76,10 @@ const statusStyles: Record<InvoiceStatus, string> = {
 }
 
 const statusLabels: Record<InvoiceStatus, string> = {
-  draft: "Draft",
-  sent: "Sent",
-  paid: "Paid",
-  overdue: "Overdue",
+  draft: "טיוטה",
+  sent: "נשלחה",
+  paid: "שולמה",
+  overdue: "באיחור",
 }
 
 export function StatusBadge({ status }: { status: InvoiceStatus }) {
@@ -94,11 +99,11 @@ const quoteStatusStyles: Record<QuoteStatus, string> = {
 }
 
 const quoteStatusLabels: Record<QuoteStatus, string> = {
-  draft: "Draft",
-  sent: "Sent",
-  accepted: "Accepted",
-  declined: "Declined",
-  converted: "Converted",
+  draft: "טיוטה",
+  sent: "נשלחה",
+  accepted: "אושרה",
+  declined: "נדחתה",
+  converted: "הומרה לחשבונית",
 }
 
 export function QuoteStatusBadge({ status }: { status: QuoteStatus }) {

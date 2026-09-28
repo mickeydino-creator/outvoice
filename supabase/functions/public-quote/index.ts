@@ -24,6 +24,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 }
 
+// Recipient-facing explanation for why a quote can't be approved/declined.
+const QUOTE_STATUS_MESSAGES: Record<string, string> = {
+  draft: "הצעת המחיר עדיין לא נשלחה",
+  accepted: "הצעת המחיר כבר אושרה",
+  declined: "הצעת המחיר כבר נדחתה",
+  converted: "הצעת המחיר כבר הומרה לחשבונית",
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -33,21 +41,21 @@ function json(body: unknown, status = 200) {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405)
+  if (req.method !== "POST") return json({ error: "שיטת הבקשה אינה נתמכת" }, 405)
 
   let body: { action?: string; quoteId?: string }
   try {
     body = await req.json()
   } catch {
-    return json({ error: "Invalid JSON body" }, 400)
+    return json({ error: "גוף הבקשה אינו תקין" }, 400)
   }
 
   const { action, quoteId } = body
   if (!quoteId || typeof quoteId !== "string") {
-    return json({ error: "Missing quoteId" }, 400)
+    return json({ error: "חסר מזהה הצעת מחיר" }, 400)
   }
   if (action !== "get" && action !== "approve" && action !== "decline") {
-    return json({ error: "Invalid action" }, 400)
+    return json({ error: "פעולה לא חוקית" }, 400)
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
@@ -60,8 +68,8 @@ Deno.serve(async (req: Request) => {
     .eq("id", quoteId)
     .maybeSingle()
 
-  if (quoteError) return json({ error: "Failed to load quote" }, 500)
-  if (!quote) return json({ error: "Quote not found" }, 404)
+  if (quoteError) return json({ error: "טעינת הצעת המחיר נכשלה" }, 500)
+  if (!quote) return json({ error: "הצעת המחיר לא נמצאה" }, 404)
 
   const [{ data: client }, { data: business }] = await Promise.all([
     admin.from("clients").select("*").eq("id", quote.client_id).maybeSingle(),
@@ -85,7 +93,7 @@ Deno.serve(async (req: Request) => {
   if (quote.status !== "sent") {
     // Already responded to (or not yet sent, or already converted) — don't
     // let a stale page re-trigger a status change or a duplicate notification.
-    return json({ error: `This quote is already ${quote.status} and can no longer be responded to.`, quote }, 409)
+    return json({ error: `${QUOTE_STATUS_MESSAGES[quote.status] ?? "הצעת המחיר כבר טופלה"}, ולא ניתן להשיב עליה עוד.`, quote }, 409)
   }
 
   const newStatus = action === "approve" ? "accepted" : "declined"
@@ -99,30 +107,32 @@ Deno.serve(async (req: Request) => {
     .select("*")
     .maybeSingle()
 
-  if (updateError) return json({ error: "Failed to update quote" }, 500)
+  if (updateError) return json({ error: "עדכון הצעת המחיר נכשל" }, 500)
   if (!updated) {
-    return json({ error: "This quote was already responded to.", quote }, 409)
+    return json({ error: "כבר התקבלה תשובה להצעת המחיר הזו.", quote }, 409)
   }
 
   // Notify the freelancer using the existing email infrastructure.
   if (RESEND_API_KEY && business?.email) {
-    const verb = newStatus === "accepted" ? "approved" : "declined"
+    const accepted = newStatus === "accepted"
     const quoteUrl = APP_URL ? `${APP_URL}/quotes/${quoteId}` : undefined
-    const clientName = escapeHtml(client?.name ?? "Your client")
+    const clientName = escapeHtml(client?.name ?? "הלקוח")
 
     const html = renderEmailShell({
       businessName: business.name,
-      eyebrow: "Quote update",
-      heading: `Quote #${quote.number} was ${verb}`,
-      bodyHtml: `<p style="margin:0;">${clientName} has <strong>${verb}</strong> this quote.${
-        newStatus === "accepted" ? " You can now convert it into an invoice from Invoxa." : ""
+      eyebrow: accepted ? "הצעת מחיר אושרה" : "הצעת מחיר נדחתה",
+      heading: accepted ? "ההצעה שלך אושרה" : "ההצעה שלך נדחתה",
+      bodyHtml: `<p style="margin:0;">הצעת המחיר ${escapeHtml(String(quote.number))} <strong>${accepted ? "אושרה" : "נדחתה"}</strong> על ידי ${clientName}.${
+        accepted ? " עכשיו אפשר להמיר אותה לחשבונית ב-Invoxa." : ""
       }</p>`,
-      primaryButton: quoteUrl ? { label: "View quote", url: quoteUrl } : undefined,
+      primaryButton: quoteUrl ? { label: "לצפייה בהצעת המחיר", url: quoteUrl } : undefined,
     })
 
     await sendResendEmail(RESEND_API_KEY, FROM_EMAIL, {
       to: business.email,
-      subject: `Quote #${quote.number} was ${verb}`,
+      subject: accepted
+        ? `ההצעה שלך אושרה: הצעת מחיר ${quote.number}`
+        : `ההצעה שלך נדחתה: הצעת מחיר ${quote.number}`,
       html,
     }).catch(() => undefined) // never fail the client-facing response over a notification hiccup
   }

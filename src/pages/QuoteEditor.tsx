@@ -76,22 +76,22 @@ export default function QuoteEditor() {
   }
 
   function handleSaveDraft() {
-    handleSave("draft", "Draft saved")
+    handleSave("draft", "הטיוטה נשמרה")
     navigate(`/quotes/${quote.id}`)
   }
 
   async function handleSend() {
     if (!client?.email) {
-      showToast("This client has no email address on file", "error")
+      showToast("ללקוח זה לא שמורה כתובת אימייל", "error")
       return
     }
     setSending(true)
     try {
       await sendQuoteByEmail(quote, client, business)
-      handleSave("sent", "Quote sent to client")
+      handleSave("sent", "הצעת המחיר נשלחה ללקוח")
       navigate(`/quotes/${quote.id}`)
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to send quote", "error")
+      showToast(err instanceof Error ? err.message : "שליחת הצעת המחיר נכשלה", "error")
     } finally {
       setSending(false)
     }
@@ -100,18 +100,18 @@ export default function QuoteEditor() {
   return (
     <div>
       <PageHeader
-        title={isNew ? "Create Quote" : `Edit ${quote.number}`}
-        subtitle="Fill in the details below — totals are calculated automatically."
+        title={isNew ? "יצירת הצעת מחיר" : `עריכת ${quote.number}`}
+        subtitle="ממלאים את הפרטים, והסכומים מחושבים אוטומטית."
         actions={
           <>
             <Button variant="secondary" onClick={() => setShowPreview((v) => !v)}>
-              {showPreview ? "Edit" : "Preview"}
+              {showPreview ? "עריכה" : "תצוגה מקדימה"}
             </Button>
             <Button variant="secondary" onClick={handleSaveDraft} disabled={!canSave}>
-              Save draft
+              שמירת טיוטה
             </Button>
             <Button variant="primary" onClick={handleSend} disabled={!canSave || sending}>
-              {sending ? "Sending..." : "Send quote"}
+              {sending ? "בשליחה..." : "שליחת הצעת מחיר"}
             </Button>
           </>
         }
@@ -124,31 +124,31 @@ export default function QuoteEditor() {
             client={client}
             business={business}
             kind="quote"
-            dateLabel="Valid until"
+            dateLabel="בתוקף עד"
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <Card className="p-5 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-800">Quote details</h3>
+                <h3 className="text-sm font-semibold text-slate-800">פרטי ההצעה</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Client</Label>
+                    <Label>לקוח</Label>
                     <Select value={quote.clientId} onChange={(e) => updateField("clientId", e.target.value)}>
-                      <option value="">Select a client</option>
+                      <option value="">בחירת לקוח</option>
                       {clients.map((c) => (
                         <option key={c.id} value={c.id}>
-                          {c.name} — {c.company}
+                          {c.name}{c.company ? ` - ${c.company}` : ""}
                         </option>
                       ))}
                     </Select>
                   </div>
                   <div>
-                    <Label>Quote number</Label>
+                    <Label>מספר הצעה</Label>
                     <Input value={quote.number} onChange={(e) => updateField("number", e.target.value)} />
                   </div>
                   <div>
-                    <Label>Issue date</Label>
+                    <Label>תאריך הפקה</Label>
                     <Input
                       type="date"
                       value={quote.issueDate.slice(0, 10)}
@@ -156,7 +156,7 @@ export default function QuoteEditor() {
                     />
                   </div>
                   <div>
-                    <Label>Expiry date</Label>
+                    <Label>בתוקף עד</Label>
                     <Input
                       type="date"
                       value={quote.expiryDate.slice(0, 10)}
@@ -164,13 +164,13 @@ export default function QuoteEditor() {
                     />
                   </div>
                   <div>
-                    <Label>Payment terms</Label>
+                    <Label>תנאי תשלום</Label>
                     <Select value={quote.paymentTerms} onChange={(e) => updateField("paymentTerms", e.target.value)}>
-                      <option>Due on receipt</option>
-                      <option>Net 7</option>
-                      <option>Net 14</option>
-                      <option>Net 30</option>
-                      <option>Net 60</option>
+                      <option value="Due on receipt">לתשלום מיידי</option>
+                      <option value="Net 7">שוטף + 7</option>
+                      <option value="Net 14">שוטף + 14</option>
+                      <option value="Net 30">שוטף + 30</option>
+                      <option value="Net 60">שוטף + 60</option>
                     </Select>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ export default function QuoteEditor() {
 
               <Card className="p-5">
                 <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-                  <h3 className="text-sm font-semibold text-slate-800">Line items</h3>
+                  <h3 className="text-sm font-semibold text-slate-800">פריטים</h3>
                   <div className="flex gap-2">
                     {products.length > 0 && (
                       <Select
@@ -188,7 +188,7 @@ export default function QuoteEditor() {
                           if (e.target.value) addProductItem(e.target.value)
                         }}
                       >
-                        <option value="">+ Add from Products & Services</option>
+                        <option value="">+ הוספה ממוצרים ושירותים</option>
                         {products.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}
@@ -197,24 +197,24 @@ export default function QuoteEditor() {
                       </Select>
                     )}
                     <Button size="sm" variant="secondary" onClick={addItem}>
-                      + Add item
+                      + הוספת פריט
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="hidden sm:grid grid-cols-12 gap-3 text-xs font-medium text-slate-400 px-1">
-                    <div className="col-span-5">Description</div>
-                    <div className="col-span-2">Qty</div>
-                    <div className="col-span-2">Unit price</div>
-                    <div className="col-span-1">Tax %</div>
-                    <div className="col-span-2 text-right">Amount</div>
+                    <div className="col-span-5">תיאור</div>
+                    <div className="col-span-2">כמות</div>
+                    <div className="col-span-2">מחיר ליחידה</div>
+                    <div className="col-span-1">מע״מ %</div>
+                    <div className="col-span-2 text-end">סכום</div>
                   </div>
                   {quote.items.map((item) => (
                     <div key={item.id} className="grid grid-cols-2 sm:grid-cols-12 gap-3 items-center">
                       <div className="col-span-2 sm:col-span-5">
                         <Input
-                          placeholder="e.g. Brand identity design"
+                          placeholder="לדוגמה: עיצוב זהות מותגית"
                           value={item.description}
                           onChange={(e) => updateItem(item.id, { description: e.target.value })}
                         />
@@ -250,7 +250,7 @@ export default function QuoteEditor() {
                         <button
                           onClick={() => removeItem(item.id)}
                           className="text-slate-300 hover:text-red-500 transition-colors"
-                          aria-label="Remove item"
+                          aria-label="הסרת פריט"
                         >
                           <TrashIcon />
                         </button>
@@ -262,7 +262,7 @@ export default function QuoteEditor() {
 
               <Card className="p-5 space-y-4">
                 <div>
-                  <Label>Discount ({business.currency})</Label>
+                  <Label>הנחה ({business.currency})</Label>
                   <Input
                     type="number"
                     min={0}
@@ -272,10 +272,10 @@ export default function QuoteEditor() {
                   />
                 </div>
                 <div>
-                  <Label>Notes</Label>
+                  <Label>הערות</Label>
                   <Textarea
                     rows={3}
-                    placeholder="This quote is valid for 14 days..."
+                    placeholder="הצעה זו בתוקף ל-14 יום..."
                     value={quote.notes}
                     onChange={(e) => updateField("notes", e.target.value)}
                   />
@@ -285,30 +285,30 @@ export default function QuoteEditor() {
 
             <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
               <Card className="p-5 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-800 mb-1">Summary</h3>
-                <SummaryRow label="Subtotal" value={formatCurrency(subtotal, business.currency)} />
-                <SummaryRow label="Tax" value={formatCurrency(tax, business.currency)} />
-                <SummaryRow label="Discount" value={`-${formatCurrency(quote.discount, business.currency)}`} />
+                <h3 className="text-sm font-semibold text-slate-800 mb-1">סיכום</h3>
+                <SummaryRow label="סכום ביניים" value={formatCurrency(subtotal, business.currency)} />
+                <SummaryRow label="מע״מ" value={formatCurrency(tax, business.currency)} />
+                <SummaryRow label="הנחה" value={`-${formatCurrency(quote.discount, business.currency)}`} />
                 <div className="pt-3 border-t border-slate-100 flex justify-between">
-                  <span className="text-sm font-semibold text-slate-800">Total</span>
+                  <span className="text-sm font-semibold text-slate-800">סה״כ</span>
                   <span className="text-lg font-semibold text-slate-900">{formatCurrency(total, business.currency)}</span>
                 </div>
                 {!canSave && (
                   <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mt-2">
-                    Select a client and add at least one line item to save.
+                    כדי לשמור, יש לבחור לקוח ולהוסיף לפחות פריט אחד.
                   </p>
                 )}
               </Card>
 
               <Card className="hidden lg:block p-3">
-                <h3 className="text-sm font-semibold text-slate-800 px-2 pt-1 pb-3">Live preview</h3>
+                <h3 className="text-sm font-semibold text-slate-800 px-2 pt-1 pb-3">תצוגה חיה</h3>
                 <LivePreviewPanel>
                   <InvoiceDocument
                     invoice={{ ...quote, dueDate: quote.expiryDate }}
                     client={client}
                     business={business}
                     kind="quote"
-                    dateLabel="Valid until"
+                    dateLabel="בתוקף עד"
                   />
                 </LivePreviewPanel>
               </Card>

@@ -4,7 +4,27 @@ import { useData } from "../store/DataContext"
 import { useTutorial } from "../store/TutorialContext"
 import { Button, Input, Select } from "../components/ui"
 
-const steps = ["Business name", "Business type", "Country", "Currency", "Logo", "Payment terms"]
+const steps = ["שם העסק", "סוג העסק", "מדינה", "מטבע", "לוגו", "תנאי תשלום"]
+
+// Stored values stay in English for compatibility with existing data; only the labels are localized.
+const BUSINESS_TYPES = [
+  { value: "Freelancer", label: "פרילנסר" },
+  { value: "Design & Creative Agency", label: "סטודיו לעיצוב וקריאייטיב" },
+  { value: "Marketing Agency", label: "משרד פרסום ושיווק" },
+  { value: "Development / IT Services", label: "פיתוח ושירותי IT" },
+  { value: "Photography", label: "צילום" },
+  { value: "Consulting", label: "ייעוץ" },
+  { value: "Home & Repair Services", label: "שירותי בית ותיקונים" },
+  { value: "Other", label: "אחר" },
+]
+
+const PAYMENT_TERMS = [
+  { value: "Due on receipt", label: "לתשלום מיידי" },
+  { value: "Net 7", label: "שוטף + 7" },
+  { value: "Net 14", label: "שוטף + 14" },
+  { value: "Net 30", label: "שוטף + 30" },
+  { value: "Net 60", label: "שוטף + 60" },
+]
 
 export default function Onboarding() {
   const { business, completeOnboarding } = useData()
@@ -16,8 +36,8 @@ export default function Onboarding() {
   const [form, setForm] = useState({
     name: "",
     businessType: "Freelancer",
-    country: "United States",
-    currency: "USD",
+    country: "ישראל",
+    currency: "ILS",
     logoDataUrl: undefined as string | undefined,
     logoInitial: "?",
     defaultPaymentTerms: "Net 14",
@@ -73,14 +93,14 @@ export default function Onboarding() {
           </div>
 
           <p className="text-xs font-medium text-blue-600 mb-1">
-            Step {step + 1} of {steps.length}
+            שלב {step + 1} מתוך {steps.length}
           </p>
 
           {step === 0 && (
-            <StepShell title="What's your business called?" subtitle="This will appear on your invoices and quotes.">
+            <StepShell title="מה שם העסק?" subtitle="השם יופיע על החשבוניות והצעות המחיר.">
               <Input
                 autoFocus
-                placeholder="e.g. Northwind Creative Agency"
+                placeholder="לדוגמה: סטודיו צפון לעיצוב"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
@@ -88,25 +108,22 @@ export default function Onboarding() {
           )}
 
           {step === 1 && (
-            <StepShell title="What type of business do you run?" subtitle="We'll tailor invoice templates to fit.">
+            <StepShell title="באיזה סוג עסק מדובר?" subtitle="נתאים את תבניות החשבוניות לתחום שלך.">
               <Select value={form.businessType} onChange={(e) => setForm({ ...form, businessType: e.target.value })}>
-                <option>Freelancer</option>
-                <option>Design & Creative Agency</option>
-                <option>Marketing Agency</option>
-                <option>Development / IT Services</option>
-                <option>Photography</option>
-                <option>Consulting</option>
-                <option>Home & Repair Services</option>
-                <option>Other</option>
+                {BUSINESS_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
               </Select>
             </StepShell>
           )}
 
           {step === 2 && (
-            <StepShell title="Where's your business based?" subtitle="Helps us set sensible defaults for tax and formatting.">
+            <StepShell title="היכן העסק פועל?" subtitle="כך נוכל להגדיר ברירות מחדל מתאימות למע״מ ולתצוגה.">
               <Input
                 autoFocus
-                placeholder="e.g. United States"
+                placeholder="לדוגמה: ישראל"
                 value={form.country}
                 onChange={(e) => setForm({ ...form, country: e.target.value })}
               />
@@ -114,30 +131,30 @@ export default function Onboarding() {
           )}
 
           {step === 3 && (
-            <StepShell title="What currency do you bill in?" subtitle="You can change this anytime in Settings.">
+            <StepShell title="באיזה מטבע מתבצע החיוב?" subtitle="אפשר לשנות זאת בכל עת בהגדרות.">
               <Select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}>
-                <option value="USD">USD — US Dollar</option>
-                <option value="EUR">EUR — Euro</option>
-                <option value="GBP">GBP — British Pound</option>
-                <option value="ILS">ILS — Israeli Shekel</option>
-                <option value="CAD">CAD — Canadian Dollar</option>
-                <option value="AUD">AUD — Australian Dollar</option>
+                <option value="ILS">ILS (₪) - שקל חדש</option>
+                <option value="USD">USD - דולר אמריקאי</option>
+                <option value="EUR">EUR - אירו</option>
+                <option value="GBP">GBP - לירה שטרלינג</option>
+                <option value="CAD">CAD - דולר קנדי</option>
+                <option value="AUD">AUD - דולר אוסטרלי</option>
               </Select>
             </StepShell>
           )}
 
           {step === 4 && (
-            <StepShell title="Add your logo" subtitle="Optional — you can always add this later.">
+            <StepShell title="הוספת לוגו" subtitle="אופציונלי - אפשר להוסיף גם בהמשך.">
               <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-slate-800 text-white text-xl font-semibold overflow-hidden">
                   {form.logoDataUrl ? (
-                    <img src={form.logoDataUrl} alt="Logo" className="h-full w-full object-cover" />
+                    <img src={form.logoDataUrl} alt="לוגו" className="h-full w-full object-cover" />
                   ) : (
                     form.name.charAt(0).toUpperCase() || "?"
                   )}
                 </div>
                 <Button type="button" variant="secondary" onClick={() => fileRef.current?.click()}>
-                  Upload logo
+                  העלאת לוגו
                 </Button>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
               </div>
@@ -145,16 +162,16 @@ export default function Onboarding() {
           )}
 
           {step === 5 && (
-            <StepShell title="Default payment terms" subtitle="Applied to new invoices automatically — you can override any time.">
+            <StepShell title="תנאי תשלום ברירת מחדל" subtitle="יחולו אוטומטית על חשבוניות חדשות - אפשר לשנות בכל חשבונית.">
               <Select
                 value={form.defaultPaymentTerms}
                 onChange={(e) => setForm({ ...form, defaultPaymentTerms: e.target.value })}
               >
-                <option>Due on receipt</option>
-                <option>Net 7</option>
-                <option>Net 14</option>
-                <option>Net 30</option>
-                <option>Net 60</option>
+                {PAYMENT_TERMS.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
               </Select>
             </StepShell>
           )}
@@ -166,15 +183,15 @@ export default function Onboarding() {
               onClick={() => setStep((s) => Math.max(0, s - 1))}
               className={step === 0 ? "invisible" : ""}
             >
-              Back
+              חזרה
             </Button>
             {step < steps.length - 1 ? (
               <Button type="button" variant="primary" disabled={!canContinue} onClick={() => setStep((s) => s + 1)}>
-                Continue
+                המשך
               </Button>
             ) : (
               <Button type="button" variant="primary" disabled={!canContinue} onClick={handleFinish}>
-                Go to dashboard
+                מעבר ללוח הבקרה
               </Button>
             )}
           </div>

@@ -159,9 +159,9 @@ function TutorialCard({
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-semibold text-blue-600">
-          Step {stepIndex + 1} of {totalSteps}
+          שלב {stepIndex + 1} מתוך {totalSteps}
         </p>
-        <button onClick={onClose} aria-label="Close tutorial" className="text-slate-300 hover:text-slate-500 -mt-1 -mr-1">
+        <button onClick={onClose} aria-label="סגירת המדריך" className="text-slate-300 hover:text-slate-500 -mt-1 -me-1">
           <CloseIcon />
         </button>
       </div>
@@ -178,7 +178,7 @@ function TutorialCard({
 
       <div className="mt-4 flex items-center justify-between">
         <button onClick={onSkip} className="text-xs font-medium text-slate-400 hover:text-slate-600">
-          Skip tutorial
+          דילוג על המדריך
         </button>
         <div className="flex items-center gap-2">
           {stepIndex > 0 && (
@@ -186,14 +186,14 @@ function TutorialCard({
               onClick={onBack}
               className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
             >
-              Back
+              הקודם
             </button>
           )}
           <button
             onClick={onNext}
             className="rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
           >
-            {stepIndex === totalSteps - 1 ? "Finish" : "Next"}
+            {stepIndex === totalSteps - 1 ? "סיום" : "הבא"}
           </button>
         </div>
       </div>

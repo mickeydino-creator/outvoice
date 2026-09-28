@@ -50,9 +50,18 @@ function daysBetween(fromKey: string, toKey: string): number {
 
 function formatCurrency(amount: number, currency: string) {
   try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount)
+    return new Intl.NumberFormat("he-IL", { style: "currency", currency }).format(amount)
   } catch {
     return `${amount.toFixed(2)} ${currency}`
+  }
+}
+
+// Recipient-facing date, e.g. "12 בספט׳ 2026", in the business's timezone.
+function formatDisplayDate(date: Date, timeZone: string) {
+  try {
+    return date.toLocaleDateString("he-IL", { timeZone, year: "numeric", month: "short", day: "numeric" })
+  } catch {
+    return date.toLocaleDateString("he-IL", { year: "numeric", month: "short", day: "numeric" })
   }
 }
 
@@ -84,22 +93,22 @@ function buildReminderEmail(params: {
         .replace(/\{\{\s*invoice_number\s*\}\}/gi, invoiceNumber)
         .replace(/\{\{\s*total\s*\}\}/gi, total)
         .replace(/\{\{\s*due_date\s*\}\}/gi, dueDate)
-    : `Hi ${clientName}, this is a reminder that invoice #${invoiceNumber} for ${total} ${
-        isOverdue ? "was due on" : "is due on"
-      } ${dueDate}${isOverdue ? " and is now overdue" : ""}.`
+    : isOverdue
+    ? `שלום${clientName ? ` ${clientName}` : ""},\nזוהי תזכורת לכך שחשבונית ${invoiceNumber} על סך ${total} הייתה לתשלום עד ${dueDate}, והיא נמצאת כעת באיחור.`
+    : `שלום${clientName ? ` ${clientName}` : ""},\nזוהי תזכורת לכך שחשבונית ${invoiceNumber} על סך ${total} לתשלום עד ${dueDate}.`
 
   const bodyHtml = escapeHtml(rendered).replace(/\n/g, "<br/>")
 
   return renderEmailShell({
     businessName,
-    eyebrow: "Payment reminder",
-    heading: `Invoice #${invoiceNumber}`,
+    eyebrow: isOverdue ? "תזכורת תשלום - באיחור" : "תזכורת תשלום",
+    heading: `חשבונית ${invoiceNumber}`,
     bodyHtml: `<p style="margin:0;">${bodyHtml}</p>`,
     infoRows: [
-      { label: isOverdue ? "Was due" : "Due date", value: dueDate },
-      { label: "Total", value: total, emphasis: true },
+      { label: "תאריך לתשלום", value: dueDate },
+      { label: "סכום לתשלום", value: total, emphasis: true },
     ],
-    primaryButton: viewUrl ? { label: "View invoice", url: viewUrl } : undefined,
+    primaryButton: viewUrl ? { label: "לצפייה בחשבונית", url: viewUrl } : undefined,
   })
 }
 
@@ -202,11 +211,11 @@ Deno.serve(async (req: Request) => {
       const total = invoiceTotal(invoice.items, invoice.discount)
       const html = buildReminderEmail({
         customMessage: settings.message ?? "",
-        clientName: client.name ?? "there",
-        businessName: business?.name ?? "Your service provider",
+        clientName: client.name ?? "",
+        businessName: business?.name ?? "נותן השירות שלך",
         invoiceNumber: invoice.number,
         total: formatCurrency(total, business?.currency ?? "USD"),
-        dueDate: dueKey,
+        dueDate: formatDisplayDate(new Date(invoice.due_date), timezone),
         isOverdue: diff < 0,
         // Public link (no login required) — the client has no account.
         viewUrl: APP_URL ? `${APP_URL}/i/${invoice.id}` : undefined,
@@ -214,10 +223,10 @@ Deno.serve(async (req: Request) => {
 
       const subject =
         diff < 0
-          ? `Overdue: Invoice #${invoice.number}`
+          ? `באיחור: חשבונית ${invoice.number}`
           : diff === 0
-          ? `Invoice #${invoice.number} is due today`
-          : `Reminder: Invoice #${invoice.number} due soon`
+          ? `חשבונית ${invoice.number} לתשלום היום`
+          : `תזכורת: חשבונית ${invoice.number} לתשלום בקרוב`
 
       const sendResult = await sendResendEmail(RESEND_API_KEY, FROM_EMAIL, {
         to: client.email,

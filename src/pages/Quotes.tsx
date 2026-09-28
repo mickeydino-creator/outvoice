@@ -30,11 +30,11 @@ export default function Quotes() {
   return (
     <div>
       <PageHeader
-        title="Quotes"
-        subtitle={`${quotes.length} total quotes`}
+        title="הצעות מחיר"
+        subtitle={`סה״כ ${quotes.length} הצעות מחיר`}
         actions={
           <Button variant="primary" onClick={() => navigate("/quotes/new")}>
-            <PlusIcon /> Create Quote
+            <PlusIcon /> יצירת הצעת מחיר
           </Button>
         }
       />
@@ -42,48 +42,48 @@ export default function Quotes() {
       <div className="px-4 lg:px-8 pb-10 space-y-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <SearchIcon className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search by quote number or client..."
+              placeholder="חיפוש לפי מספר הצעה או לקוח..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
           <Select value={status} onChange={(e) => setStatus(e.target.value as QuoteStatus | "all")} className="sm:w-44">
-            <option value="all">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="sent">Sent</option>
-            <option value="accepted">Accepted</option>
-            <option value="declined">Declined</option>
-            <option value="converted">Converted</option>
+            <option value="all">כל הסטטוסים</option>
+            <option value="draft">טיוטה</option>
+            <option value="sent">נשלחה</option>
+            <option value="accepted">אושרה</option>
+            <option value="declined">נדחתה</option>
+            <option value="converted">הומרה לחשבונית</option>
           </Select>
         </div>
 
         {quotes.length === 0 ? (
           <EmptyState
-            title="No quotes yet"
-            description="Send a professional quote and convert it to an invoice the moment your client accepts."
+            title="עדיין אין הצעות מחיר"
+            description="אפשר לשלוח הצעת מחיר מקצועית ולהמיר אותה לחשבונית ברגע שהלקוח מאשר."
             action={
               <Button variant="primary" onClick={() => navigate("/quotes/new")}>
-                Create your first quote
+                יצירת הצעת המחיר הראשונה
               </Button>
             }
           />
         ) : filtered.length === 0 ? (
-          <EmptyState title="No matching quotes" description="Try adjusting your search or filters." />
+          <EmptyState title="לא נמצאו הצעות מחיר תואמות" description="אפשר לשנות את החיפוש או הסינון." />
         ) : (
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-slate-400 border-b border-slate-100 bg-slate-50/50">
-                    <th className="font-medium px-5 py-3">Quote</th>
-                    <th className="font-medium px-5 py-3">Client</th>
-                    <th className="font-medium px-5 py-3">Issued</th>
-                    <th className="font-medium px-5 py-3">Expires</th>
-                    <th className="font-medium px-5 py-3">Amount</th>
-                    <th className="font-medium px-5 py-3">Status</th>
+                  <tr className="text-start text-xs text-slate-400 border-b border-slate-100 bg-slate-50/50">
+                    <th className="font-medium px-5 py-3">הצעת מחיר</th>
+                    <th className="font-medium px-5 py-3">לקוח</th>
+                    <th className="font-medium px-5 py-3">תאריך הפקה</th>
+                    <th className="font-medium px-5 py-3">בתוקף עד</th>
+                    <th className="font-medium px-5 py-3">סכום</th>
+                    <th className="font-medium px-5 py-3">סטטוס</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -103,7 +103,7 @@ export default function Quotes() {
                               <p className="text-xs text-slate-400">{client.company}</p>
                             </div>
                           ) : (
-                            "—"
+                            "-"
                           )}
                         </td>
                         <td className="px-5 py-3.5 text-slate-500">{formatDate(q.issueDate)}</td>

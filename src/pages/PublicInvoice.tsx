@@ -29,7 +29,7 @@ export default function PublicInvoice() {
       })
       .catch((err) => {
         if (cancelled) return
-        setErrorMessage(err instanceof Error ? err.message : "Something went wrong")
+        setErrorMessage(err instanceof Error ? err.message : "משהו השתבש")
         setState(err instanceof Error && err.message.toLowerCase().includes("not found") ? "not-found" : "error")
       })
     return () => {
@@ -51,8 +51,8 @@ export default function PublicInvoice() {
     return (
       <PublicShell>
         <div className="max-w-md mx-auto text-center py-24 px-4">
-          <h1 className="text-lg font-semibold text-slate-900">Invoice not found</h1>
-          <p className="mt-2 text-sm text-slate-500">This link may be invalid or the invoice may have been removed.</p>
+          <h1 className="text-lg font-semibold text-slate-900">החשבונית לא נמצאה</h1>
+          <p className="mt-2 text-sm text-slate-500">ייתכן שהקישור שגוי או שהחשבונית הוסרה.</p>
         </div>
       </PublicShell>
     )
@@ -62,8 +62,8 @@ export default function PublicInvoice() {
     return (
       <PublicShell>
         <div className="max-w-md mx-auto text-center py-24 px-4">
-          <h1 className="text-lg font-semibold text-slate-900">Something went wrong</h1>
-          <p className="mt-2 text-sm text-slate-500">{errorMessage || "Please try refreshing the page."}</p>
+          <h1 className="text-lg font-semibold text-slate-900">משהו השתבש</h1>
+          <p className="mt-2 text-sm text-slate-500">{errorMessage || "אפשר לנסות לרענן את הדף."}</p>
         </div>
       </PublicShell>
     )
@@ -75,9 +75,9 @@ export default function PublicInvoice() {
     setDownloading(true)
     try {
       const html = renderInvoiceTemplate(data!.templateHtml ?? DEFAULT_INVOICE_TEMPLATE, data!.invoice, data!.client, data!.business)
-      await downloadHtmlAsPdf(html, `Invoice-${data!.invoice.number}.pdf`)
+      await downloadHtmlAsPdf(html, `חשבונית-${data!.invoice.number}.pdf`)
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to generate PDF")
+      setErrorMessage(err instanceof Error ? err.message : "יצירת ה-PDF נכשלה")
     } finally {
       setDownloading(false)
     }
@@ -86,25 +86,25 @@ export default function PublicInvoice() {
   return (
     <PublicShell>
       <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 text-center sm:text-left">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 text-center sm:text-start">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-blue-600">
-              Invoice from {business.name || "your service provider"}
+              חשבונית מאת {business.name || "ספק השירות"}
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-900">Invoice {invoice.number}</h1>
+            <h1 className="mt-1 text-2xl font-semibold text-slate-900">חשבונית {invoice.number}</h1>
           </div>
           <Button variant="secondary" className="w-full sm:w-auto justify-center" onClick={handleDownload} disabled={downloading}>
-            {downloading ? "Preparing..." : "Download PDF"}
+            {downloading ? "בהכנה..." : "הורדת PDF"}
           </Button>
         </div>
 
         {invoice.status === "paid" && (
-          <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-center sm:text-left">
-            <p className="text-sm font-semibold text-emerald-700">✓ This invoice has been paid. Thank you!</p>
+          <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-center sm:text-start">
+            <p className="text-sm font-semibold text-emerald-700">✓ החשבונית שולמה. תודה רבה!</p>
           </div>
         )}
 
-        <InvoiceDocument invoice={invoice} client={client} business={business} kind="invoice" dateLabel="Due date" />
+        <InvoiceDocument invoice={invoice} client={client} business={business} kind="invoice" dateLabel="תאריך לתשלום" />
       </div>
     </PublicShell>
   )

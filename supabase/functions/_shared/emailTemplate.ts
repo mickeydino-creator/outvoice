@@ -1,5 +1,5 @@
 // Shared visual "chrome" for every transactional email sent from an edge
-// function (quote approval notifications, automated reminders) — mirrors
+// function (quote approval notifications, automated reminders). Mirrors
 // src/lib/emailTemplate.ts so client-side and server-side emails look like
 // one consistent product. Kept dependency-free (plain string templating) so
 // it can be deployed either via the CLI or pasted directly into the
@@ -25,6 +25,10 @@ export interface EmailShellParams {
   secondaryButton?: EmailButton
 }
 
+// Hebrew-first, right-to-left layout. Email clients that don't have Google
+// Sans fall back to Arial, which covers Hebrew well.
+const FONT_STACK = "'Google Sans', Arial, 'Helvetica Neue', sans-serif"
+
 export function escapeHtml(value: string) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -33,12 +37,12 @@ export function escapeHtml(value: string) {
 }
 
 function infoRowsHtml(rows: EmailInfoRow[]) {
-  return `<table role="presentation" width="100%" style="border-collapse:collapse;">
+  return `<table role="presentation" dir="rtl" width="100%" style="border-collapse:collapse;">
     ${rows
       .map(
         (row) => `<tr>
-          <td style="padding:5px 0;font-size:13px;color:${row.emphasis ? "#0F172A" : "#64748B"};font-weight:${row.emphasis ? "700" : "400"};">${escapeHtml(row.label)}</td>
-          <td style="padding:5px 0;font-size:13px;text-align:right;color:${row.emphasis ? "#0F172A" : "#334155"};font-weight:${row.emphasis ? "700" : "400"};">${escapeHtml(row.value)}</td>
+          <td align="right" style="padding:5px 0;font-size:13px;text-align:right;color:${row.emphasis ? "#0F172A" : "#64748B"};font-weight:${row.emphasis ? "700" : "400"};">${escapeHtml(row.label)}</td>
+          <td align="left" style="padding:5px 0;font-size:13px;text-align:left;color:${row.emphasis ? "#0F172A" : "#334155"};font-weight:${row.emphasis ? "700" : "400"};">${escapeHtml(row.value)}</td>
         </tr>`
       )
       .join("")}
@@ -49,7 +53,7 @@ function buttonHtml(button: EmailButton, primary: boolean) {
   const style = primary
     ? "background:#2563EB;color:#FFFFFF;border:1px solid #2563EB;"
     : "background:#FFFFFF;color:#2563EB;border:1px solid #E2E8F0;"
-  return `<a href="${button.url}" style="display:inline-block;${style}text-decoration:none;font-size:14px;font-weight:700;padding:12px 24px;border-radius:12px;">${escapeHtml(button.label)}</a>`
+  return `<a href="${button.url}" style="display:inline-block;${style}text-decoration:none;font-family:${FONT_STACK};font-size:14px;font-weight:700;padding:12px 24px;border-radius:12px;">${escapeHtml(button.label)}</a>`
 }
 
 export function renderEmailShell({
@@ -61,37 +65,41 @@ export function renderEmailShell({
   primaryButton,
   secondaryButton,
 }: EmailShellParams) {
-  const safeBusiness = escapeHtml(businessName || "Your business")
+  const safeBusiness = escapeHtml(businessName || "העסק שלך")
   // Never embed the uploaded logo image itself here: a base64 data URI can
   // easily push the email past Gmail's ~100KB clipping threshold (showing a
   // blank "[Message clipped]" body), and many clients don't render `data:`
   // image sources at all. A plain colored initial is small and always renders.
-  const logo = `<div style="width:36px;height:36px;border-radius:10px;background:#2563EB;color:#ffffff;font-weight:700;font-family:Arial,sans-serif;font-size:15px;line-height:36px;text-align:center;">${safeBusiness.charAt(0).toUpperCase() || "?"}</div>`
+  const logo = `<div style="width:36px;height:36px;border-radius:10px;background:#2563EB;color:#ffffff;font-weight:700;font-family:${FONT_STACK};font-size:15px;line-height:36px;text-align:center;">${safeBusiness.charAt(0).toUpperCase() || "?"}</div>`
 
   const buttonsHtml =
     primaryButton || secondaryButton
-      ? `<div style="margin-top:26px;">
+      ? `<div style="margin-top:26px;text-align:right;">
           ${primaryButton ? buttonHtml(primaryButton, true) : ""}
           ${secondaryButton ? `<span style="display:inline-block;width:10px;"></span>${buttonHtml(secondaryButton, false)}` : ""}
         </div>`
       : ""
 
-  return `<div style="background:#F1F5F9;padding:32px 16px;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" style="max-width:520px;margin:0 auto;border-collapse:collapse;">
+  return `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body dir="rtl" style="margin:0;padding:0;background:#F1F5F9;">
+  <div dir="rtl" style="background:#F1F5F9;padding:32px 16px;font-family:${FONT_STACK};direction:rtl;text-align:right;">
+    <table role="presentation" dir="rtl" width="100%" style="max-width:520px;margin:0 auto;border-collapse:collapse;">
       <tr>
         <td style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:20px;">
-          <table role="presentation" width="100%" style="border-collapse:collapse;">
+          <table role="presentation" dir="rtl" width="100%" style="border-collapse:collapse;">
             <tr>
-              <td style="padding:22px 28px;border-bottom:1px solid #EEF2F7;">
-                <table role="presentation" style="border-collapse:collapse;"><tr>
+              <td align="right" style="padding:22px 28px;border-bottom:1px solid #EEF2F7;text-align:right;">
+                <table role="presentation" dir="rtl" style="border-collapse:collapse;"><tr>
                   <td width="36">${logo}</td>
-                  <td style="padding-left:10px;font-size:14px;font-weight:700;color:#0F172A;">${safeBusiness}</td>
+                  <td align="right" style="padding-right:10px;font-size:14px;font-weight:700;color:#0F172A;text-align:right;">${safeBusiness}</td>
                 </tr></table>
               </td>
             </tr>
             <tr>
-              <td style="padding:28px;">
-                <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#2563EB;">${escapeHtml(eyebrow)}</p>
+              <td align="right" style="padding:28px;text-align:right;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:800;color:#2563EB;">${escapeHtml(eyebrow)}</p>
                 <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#0F172A;font-weight:800;">${escapeHtml(heading)}</h1>
                 <div style="font-size:15px;line-height:1.7;color:#334155;">${bodyHtml}</div>
                 ${
@@ -106,8 +114,10 @@ export function renderEmailShell({
         </td>
       </tr>
       <tr>
-        <td style="padding:18px 8px 0;text-align:center;font-size:12px;color:#94A3B8;">Sent by ${safeBusiness}</td>
+        <td align="center" style="padding:18px 8px 0;text-align:center;font-size:12px;color:#94A3B8;">נשלח על ידי ${safeBusiness}</td>
       </tr>
     </table>
-  </div>`
+  </div>
+</body>
+</html>`
 }

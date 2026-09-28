@@ -2,7 +2,7 @@ import { renderEmailShell, escapeHtml } from "./emailTemplate"
 
 // Builds the email sent when an invoice/quote is shared with a client: a
 // short message plus a Client/Total/Due-date summary and a "View" button
-// linking to the document's page (no PDF is attached — the client always
+// linking to the document's page (no PDF is attached: the client always
 // sees the current, up-to-date document there, and can download a PDF from
 // that page themselves).
 interface EmailPreviewParams {
@@ -24,20 +24,25 @@ export function buildDocumentEmail({
   dueDate,
   viewUrl,
 }: EmailPreviewParams) {
-  const label = kind === "invoice" ? "Invoice" : "Quote"
-  const dueLabel = kind === "invoice" ? "Due date" : "Valid until"
-  const safeClient = escapeHtml(clientName || "there")
+  const label = kind === "invoice" ? "חשבונית" : "הצעת מחיר"
+  const dueLabel = kind === "invoice" ? "תאריך לתשלום" : "בתוקף עד"
+  const safeClient = clientName ? ` ${escapeHtml(clientName)}` : ""
+  const safeBusiness = escapeHtml(businessName || "נותן השירות שלך")
+  const intro =
+    kind === "invoice"
+      ? `קיבלת חשבונית חדשה מ-${safeBusiness}. אפשר לצפות בחשבונית ולהוריד אותה בקישור הבא.`
+      : `קיבלת הצעת מחיר חדשה מ-${safeBusiness}. אפשר לצפות בהצעה ולהשיב עליה בקישור הבא.`
 
   return renderEmailShell({
     businessName,
     eyebrow: label,
-    heading: `${label} #${number}`,
-    bodyHtml: `<p style="margin:0;">Hi ${safeClient}, ${businessName || "your service provider"} sent you a new ${label.toLowerCase()}. You can review it any time using the link below.</p>`,
+    heading: `${label} ${number}`,
+    bodyHtml: `<p style="margin:0;">שלום${safeClient},</p><p style="margin:8px 0 0;">${intro}</p>`,
     infoRows: [
-      { label: "Client", value: clientName },
+      { label: "לקוח", value: clientName },
       { label: dueLabel, value: dueDate },
-      { label: "Total", value: total, emphasis: true },
+      { label: "סה״כ", value: total, emphasis: true },
     ],
-    primaryButton: { label: `View ${label.toLowerCase()}`, url: viewUrl },
+    primaryButton: { label: kind === "invoice" ? "לצפייה בחשבונית" : "לצפייה בהצעת המחיר", url: viewUrl },
   })
 }

@@ -23,9 +23,9 @@ export default function QuoteView() {
   if (!quote) {
     return (
       <div className="px-4 lg:px-8 py-10">
-        <p className="text-slate-500">Quote not found.</p>
+        <p className="text-slate-500">הצעת המחיר לא נמצאה.</p>
         <Button className="mt-4" onClick={() => navigate("/quotes")}>
-          Back to quotes
+          חזרה להצעות המחיר
         </Button>
       </div>
     )
@@ -36,16 +36,16 @@ export default function QuoteView() {
   async function handleSend() {
     if (!quote) return
     if (!client?.email) {
-      showToast("This client has no email address on file", "error")
+      showToast("ללקוח זה לא שמורה כתובת אימייל", "error")
       return
     }
     setSending(true)
     try {
       await sendQuoteByEmail(quote, client, business)
       markQuoteStatus(quote.id, "sent")
-      showToast(`Quote ${quote.number} sent to ${client.email}`)
+      showToast(`הצעת מחיר ${quote.number} נשלחה אל ${client.email}`)
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to send quote", "error")
+      showToast(err instanceof Error ? err.message : "שליחת הצעת המחיר נכשלה", "error")
     } finally {
       setSending(false)
     }
@@ -54,20 +54,20 @@ export default function QuoteView() {
   function handleAccept() {
     if (!quote) return
     markQuoteStatus(quote.id, "accepted")
-    showToast(`Marked ${quote.number} as accepted`)
+    showToast(`הצעת מחיר ${quote.number} סומנה כמאושרת`)
   }
 
   function handleDecline() {
     if (!quote) return
     markQuoteStatus(quote.id, "declined")
-    showToast("Quote marked as declined", "info")
+    showToast("הצעת המחיר סומנה כנדחתה", "info")
   }
 
   function handleDuplicate() {
     if (!quote) return
     const copy = duplicateQuote(quote.id)
     if (copy) {
-      showToast(`Duplicated as ${copy.number}`)
+      showToast(`נוצר עותק: ${copy.number}`)
       navigate(`/quotes/${copy.id}/edit`)
     }
   }
@@ -76,7 +76,7 @@ export default function QuoteView() {
     if (!quote) return
     const invoice = convertQuoteToInvoice(quote.id)
     if (invoice) {
-      showToast(`Converted to invoice ${invoice.number}`)
+      showToast(`הומרה לחשבונית ${invoice.number}`)
       navigate(`/invoices/${invoice.id}`)
     }
   }
@@ -86,9 +86,9 @@ export default function QuoteView() {
     setDownloading(true)
     try {
       const html = renderQuoteTemplate(templates.quoteHtml, quote, client, business)
-      await downloadHtmlAsPdf(html, `Quote-${quote.number}.pdf`)
+      await downloadHtmlAsPdf(html, `הצעת-מחיר-${quote.number}.pdf`)
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to generate PDF", "error")
+      showToast(err instanceof Error ? err.message : "יצירת קובץ ה-PDF נכשלה", "error")
     } finally {
       setDownloading(false)
     }
@@ -96,9 +96,9 @@ export default function QuoteView() {
 
   function handleDelete() {
     if (!quote) return
-    if (confirm(`Delete quote ${quote.number}? This cannot be undone.`)) {
+    if (confirm(`למחוק את הצעת המחיר ${quote.number}? לא ניתן לבטל פעולה זו.`)) {
       deleteQuote(quote.id)
-      showToast("Quote deleted", "info")
+      showToast("הצעת המחיר נמחקה", "info")
       navigate("/quotes")
     }
   }
@@ -108,47 +108,47 @@ export default function QuoteView() {
   function handleCopyLink() {
     navigator.clipboard
       .writeText(publicUrl)
-      .then(() => showToast("Public link copied"))
-      .catch(() => showToast("Couldn't copy link", "error"))
+      .then(() => showToast("הקישור ללקוח הועתק"))
+      .catch(() => showToast("לא ניתן להעתיק את הקישור", "error"))
   }
 
   return (
     <div>
       <PageHeader
         title={quote.number}
-        subtitle={client ? `${client.name} — ${client.company}` : "No client"}
+        subtitle={client ? `${client.name}${client.company ? ` - ${client.company}` : ""}` : "ללא לקוח"}
         actions={
           <>
             <QuoteStatusBadge status={quote.status} />
             {quote.status !== "converted" && (
               <Button variant="secondary" onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
-                Edit
+                עריכה
               </Button>
             )}
             <Button variant="secondary" onClick={handleDuplicate}>
-              Duplicate
+              שכפול
             </Button>
             <Button variant="secondary" onClick={handleDownload} disabled={downloading}>
-              {downloading ? "Preparing..." : "Download PDF"}
+              {downloading ? "בהכנה..." : "הורדת PDF"}
             </Button>
             {quote.status === "draft" && (
               <Button variant="primary" onClick={handleSend} disabled={sending}>
-                {sending ? "Sending..." : "Send quote"}
+                {sending ? "בשליחה..." : "שליחת הצעת מחיר"}
               </Button>
             )}
             {quote.status === "sent" && (
               <>
                 <Button variant="secondary" onClick={handleDecline}>
-                  Mark declined
+                  סימון כנדחתה
                 </Button>
                 <Button variant="secondary" onClick={handleAccept}>
-                  Mark accepted
+                  סימון כמאושרת
                 </Button>
               </>
             )}
             {(quote.status === "sent" || quote.status === "accepted") && (
               <Button variant="primary" onClick={handleConvert}>
-                Convert to Invoice
+                המרה לחשבונית
               </Button>
             )}
           </>
@@ -159,31 +159,31 @@ export default function QuoteView() {
         {quote.status !== "draft" && (
           <div className="max-w-3xl mx-auto mb-4 flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
             <p className="flex-1 truncate text-xs text-slate-500">
-              Public link: <span className="text-slate-700">{publicUrl}</span>
+              קישור ללקוח: <span className="text-slate-700">{publicUrl}</span>
             </p>
             <Button size="sm" variant="secondary" onClick={handleCopyLink}>
-              Copy link
+              העתקת קישור
             </Button>
           </div>
         )}
 
         {quote.status === "accepted" && quote.respondedAt && (
           <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            Client approved this quote on {formatDate(quote.respondedAt)}.
+            הצעת המחיר אושרה על ידי הלקוח בתאריך {formatDate(quote.respondedAt)}.
           </div>
         )}
 
         {quote.status === "declined" && quote.respondedAt && (
           <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-            Client rejected this quote on {formatDate(quote.respondedAt)}.
+            הצעת המחיר נדחתה על ידי הלקוח בתאריך {formatDate(quote.respondedAt)}.
           </div>
         )}
 
         {quote.convertedInvoiceId && (
           <div className="max-w-3xl mx-auto mb-4 rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-700">
-            This quote was converted to{" "}
+            הצעת מחיר זו הומרה ל
             <button className="font-medium underline" onClick={() => navigate(`/invoices/${quote.convertedInvoiceId}`)}>
-              an invoice
+              חשבונית
             </button>
             .
           </div>
@@ -193,11 +193,11 @@ export default function QuoteView() {
           client={client}
           business={business}
           kind="quote"
-          dateLabel="Valid until"
+          dateLabel="בתוקף עד"
         />
         <div className="max-w-3xl mx-auto mt-4 flex justify-end">
           <button onClick={handleDelete} className="text-xs text-slate-400 hover:text-red-500">
-            Delete quote
+            מחיקת הצעת המחיר
           </button>
         </div>
       </div>

@@ -27,8 +27,10 @@ export default function LivePreviewPanel({ children, width = 768 }: { children: 
   }, [width])
 
   return (
-    <div ref={outerRef} className="overflow-hidden rounded-2xl bg-slate-100" style={{ height }}>
-      <div ref={innerRef} style={{ width, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+    // The outer box is forced LTR so the oversized inner document anchors to the left edge
+    // and scales from top-left; the document itself keeps the page's RTL direction.
+    <div ref={outerRef} dir="ltr" className="overflow-hidden rounded-2xl bg-slate-100" style={{ height }}>
+      <div ref={innerRef} dir="rtl" style={{ width, transform: `scale(${scale})`, transformOrigin: "top left" }}>
         {children}
       </div>
     </div>

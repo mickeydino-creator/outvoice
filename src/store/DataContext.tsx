@@ -165,8 +165,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             return {
               id: row.id,
               invoiceId: row.invoice_id,
-              invoiceNumber: invoiceRow?.number ?? "—",
-              clientName: clientRow?.name ?? "—",
+              invoiceNumber: invoiceRow?.number ?? "-",
+              clientName: clientRow?.name ?? "-",
               reminderKey: row.reminder_key,
               sentAt: row.sent_at,
             }
@@ -526,8 +526,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             return {
               id: row.id,
               invoiceId: row.invoice_id,
-              invoiceNumber: invoice?.number ?? "—",
-              clientName: client?.name ?? "—",
+              invoiceNumber: invoice?.number ?? "-",
+              clientName: client?.name ?? "-",
               reminderKey: row.reminder_key,
               sentAt: row.sent_at,
             }

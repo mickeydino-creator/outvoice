@@ -22,7 +22,7 @@ export async function sendInvoiceByEmail(invoice: Invoice, client: Client, busin
     viewUrl,
   })
 
-  const subject = `Invoice #${invoice.number} from ${business.name}`
+  const subject = `חשבונית ${invoice.number} מ-${business.name}`
   await sendEmail(client.email, subject, body)
 }
 
@@ -41,7 +41,7 @@ export async function sendQuoteByEmail(quote: Quote, client: Client, business: B
     viewUrl,
   })
 
-  const subject = `Quote #${quote.number} from ${business.name}`
+  const subject = `הצעת מחיר ${quote.number} מ-${business.name}`
   await sendEmail(client.email, subject, body)
 }
 
@@ -50,22 +50,22 @@ export async function sendQuoteByEmail(quote: Quote, client: Client, business: B
 // send-invoice-reminders.
 export async function sendInvoiceReminder(invoice: Invoice, client: Client, business: BusinessProfile) {
   const viewUrl = `${window.location.origin}/i/${invoice.id}`
-  const safeClient = escapeHtml(client.name || "there")
+  const safeClient = client.name ? ` ${escapeHtml(client.name)}` : ""
   const total = formatCurrency(invoiceTotal(invoice), business.currency)
   const dueDate = formatDate(invoice.dueDate)
 
   const body = renderEmailShell({
     businessName: business.name,
-    eyebrow: "Payment reminder",
-    heading: `Invoice #${invoice.number}`,
-    bodyHtml: `<p style="margin:0;">Hi ${safeClient}, this is a friendly reminder that this invoice is still outstanding.</p>`,
+    eyebrow: "תזכורת תשלום",
+    heading: `חשבונית ${invoice.number}`,
+    bodyHtml: `<p style="margin:0;">שלום${safeClient},</p><p style="margin:8px 0 0;">זוהי תזכורת ידידותית לכך שהחשבונית עדיין לא שולמה.</p>`,
     infoRows: [
-      { label: "Due date", value: dueDate },
-      { label: "Total", value: total, emphasis: true },
+      { label: "תאריך לתשלום", value: dueDate },
+      { label: "סה״כ", value: total, emphasis: true },
     ],
-    primaryButton: { label: "View invoice", url: viewUrl },
+    primaryButton: { label: "לצפייה בחשבונית", url: viewUrl },
   })
 
-  const subject = `Reminder: Invoice #${invoice.number} from ${business.name}`
+  const subject = `תזכורת: חשבונית ${invoice.number} מ-${business.name}`
   await sendEmail(client.email, subject, body)
 }

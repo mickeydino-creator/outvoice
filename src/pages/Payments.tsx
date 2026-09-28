@@ -45,56 +45,56 @@ export default function Payments() {
 
   return (
     <div>
-      <PageHeader title="Payments" subtitle="Track what's been paid, what's pending, and what's overdue." />
+      <PageHeader title="תשלומים" subtitle="מעקב אחר מה ששולם, מה שממתין לתשלום ומה שבאיחור." />
 
       <div className="px-4 lg:px-8 pb-10 space-y-6">
         <div data-tutorial="payments-overview" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="p-4">
-            <p className="text-xs font-medium text-slate-500">Paid</p>
+            <p className="text-xs font-medium text-slate-500">שולם</p>
             <p className="mt-2 text-xl font-semibold text-emerald-600">{formatCurrency(stats.paid, business.currency)}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-xs font-medium text-slate-500">Pending</p>
+            <p className="text-xs font-medium text-slate-500">ממתין לתשלום</p>
             <p className="mt-2 text-xl font-semibold text-blue-600">{formatCurrency(stats.pending, business.currency)}</p>
           </Card>
           <Card className="p-4">
-            <p className="text-xs font-medium text-slate-500">Overdue</p>
+            <p className="text-xs font-medium text-slate-500">באיחור</p>
             <p className="mt-2 text-xl font-semibold text-red-600">{formatCurrency(stats.overdue, business.currency)}</p>
           </Card>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <SearchIcon className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search by invoice number or client..."
+              placeholder="חיפוש לפי מספר חשבונית או לקוח..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9"
+              className="ps-9"
             />
           </div>
           <Select value={status} onChange={(e) => setStatus(e.target.value as InvoiceStatus | "all")} className="sm:w-44">
-            <option value="all">All statuses</option>
-            <option value="sent">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="overdue">Overdue</option>
+            <option value="all">כל הסטטוסים</option>
+            <option value="sent">ממתינה לתשלום</option>
+            <option value="paid">שולמה</option>
+            <option value="overdue">באיחור</option>
           </Select>
         </div>
 
         {rows.length === 0 ? (
-          <EmptyState title="No payment activity yet" description="Sent and paid invoices will show up here." />
+          <EmptyState title="עדיין אין פעילות תשלומים" description="חשבוניות שנשלחו ושולמו יופיעו כאן." />
         ) : (
           <Card className="overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-slate-400 border-b border-slate-100 bg-slate-50/50">
-                    <th className="font-medium px-5 py-3">Invoice</th>
-                    <th className="font-medium px-5 py-3">Client</th>
-                    <th className="font-medium px-5 py-3">Due date</th>
-                    <th className="font-medium px-5 py-3">Paid date</th>
-                    <th className="font-medium px-5 py-3">Amount</th>
-                    <th className="font-medium px-5 py-3">Status</th>
+                  <tr className="text-start text-xs text-slate-400 border-b border-slate-100 bg-slate-50/50">
+                    <th className="font-medium px-5 py-3">חשבונית</th>
+                    <th className="font-medium px-5 py-3">לקוח</th>
+                    <th className="font-medium px-5 py-3">תאריך לתשלום</th>
+                    <th className="font-medium px-5 py-3">תאריך תשלום</th>
+                    <th className="font-medium px-5 py-3">סכום</th>
+                    <th className="font-medium px-5 py-3">סטטוס</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -107,9 +107,9 @@ export default function Payments() {
                             {inv.number}
                           </Link>
                         </td>
-                        <td className="px-5 py-3.5 text-slate-600">{client?.name ?? "—"}</td>
+                        <td className="px-5 py-3.5 text-slate-600">{client?.name ?? "-"}</td>
                         <td className="px-5 py-3.5 text-slate-500">{formatDate(inv.dueDate)}</td>
-                        <td className="px-5 py-3.5 text-slate-500">{inv.paidAt ? formatDate(inv.paidAt) : "—"}</td>
+                        <td className="px-5 py-3.5 text-slate-500">{inv.paidAt ? formatDate(inv.paidAt) : "-"}</td>
                         <td className="px-5 py-3.5 font-medium text-slate-800">
                           {formatCurrency(invoiceTotal(inv), business.currency)}
                         </td>

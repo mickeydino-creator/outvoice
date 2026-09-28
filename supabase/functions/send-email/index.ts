@@ -22,14 +22,14 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+    return new Response(JSON.stringify({ error: "שיטת הבקשה אינה נתמכת" }), {
       status: 405,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })
   }
 
   if (!RESEND_API_KEY) {
-    return new Response(JSON.stringify({ error: "RESEND_API_KEY is not configured" }), {
+    return new Response(JSON.stringify({ error: "שירות האימייל לא הוגדר (חסר RESEND_API_KEY)" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })
@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
     const { to, subject, html, attachments } = await req.json()
 
     if (!to || !subject || !html) {
-      return new Response(JSON.stringify({ error: "Missing required fields: to, subject, html" }), {
+      return new Response(JSON.stringify({ error: "חסרים שדות חובה: to, subject, html" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       })
@@ -59,7 +59,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "שגיאה לא ידועה" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     })

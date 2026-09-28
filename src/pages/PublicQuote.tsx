@@ -32,7 +32,7 @@ export default function PublicQuote() {
       })
       .catch((err) => {
         if (cancelled) return
-        setErrorMessage(err instanceof Error ? err.message : "Something went wrong")
+        setErrorMessage(err instanceof Error ? err.message : "משהו השתבש")
         setState(err instanceof Error && err.message.toLowerCase().includes("not found") ? "not-found" : "error")
       })
     return () => {
@@ -47,7 +47,7 @@ export default function PublicQuote() {
       const result = await approvePublicQuote(id)
       setData(result)
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to approve quote")
+      setErrorMessage(err instanceof Error ? err.message : "אישור ההצעה נכשל")
     } finally {
       setResponding(null)
     }
@@ -61,7 +61,7 @@ export default function PublicQuote() {
       setData(result)
       setConfirmDecline(false)
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to decline quote")
+      setErrorMessage(err instanceof Error ? err.message : "דחיית ההצעה נכשלה")
     } finally {
       setResponding(null)
     }
@@ -81,8 +81,8 @@ export default function PublicQuote() {
     return (
       <PublicShell>
         <div className="max-w-md mx-auto text-center py-24 px-4">
-          <h1 className="text-lg font-semibold text-slate-900">Quote not found</h1>
-          <p className="mt-2 text-sm text-slate-500">This link may be invalid or the quote may have been removed.</p>
+          <h1 className="text-lg font-semibold text-slate-900">הצעת המחיר לא נמצאה</h1>
+          <p className="mt-2 text-sm text-slate-500">ייתכן שהקישור שגוי או שהצעת המחיר הוסרה.</p>
         </div>
       </PublicShell>
     )
@@ -92,8 +92,8 @@ export default function PublicQuote() {
     return (
       <PublicShell>
         <div className="max-w-md mx-auto text-center py-24 px-4">
-          <h1 className="text-lg font-semibold text-slate-900">Something went wrong</h1>
-          <p className="mt-2 text-sm text-slate-500">{errorMessage || "Please try refreshing the page."}</p>
+          <h1 className="text-lg font-semibold text-slate-900">משהו השתבש</h1>
+          <p className="mt-2 text-sm text-slate-500">{errorMessage || "אפשר לנסות לרענן את הדף."}</p>
         </div>
       </PublicShell>
     )
@@ -105,9 +105,9 @@ export default function PublicQuote() {
     setDownloading(true)
     try {
       const html = renderQuoteTemplate(data!.templateHtml ?? DEFAULT_QUOTE_TEMPLATE, data!.quote, data!.client, data!.business)
-      await downloadHtmlAsPdf(html, `Quote-${data!.quote.number}.pdf`)
+      await downloadHtmlAsPdf(html, `הצעת-מחיר-${data!.quote.number}.pdf`)
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Failed to generate PDF")
+      setErrorMessage(err instanceof Error ? err.message : "יצירת ה-PDF נכשלה")
     } finally {
       setDownloading(false)
     }
@@ -116,21 +116,21 @@ export default function PublicQuote() {
   return (
     <PublicShell>
       <div className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 text-center sm:text-left">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 text-center sm:text-start">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-blue-600">Quote from {business.name || "your service provider"}</p>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-900">Quote {quote.number}</h1>
+            <p className="text-xs font-medium uppercase tracking-wide text-blue-600">הצעת מחיר מאת {business.name || "ספק השירות"}</p>
+            <h1 className="mt-1 text-2xl font-semibold text-slate-900">הצעת מחיר {quote.number}</h1>
           </div>
           <Button variant="secondary" className="w-full sm:w-auto justify-center" onClick={handleDownload} disabled={downloading}>
-            {downloading ? "Preparing..." : "Download PDF"}
+            {downloading ? "בהכנה..." : "הורדת PDF"}
           </Button>
         </div>
 
         {quote.status === "sent" && (
           <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
             <p className="text-sm text-slate-600 mb-4">
-              {client?.name ? `Hi ${client.name}, please` : "Please"} review the quote below and let us know if you'd
-              like to proceed.
+              {client?.name ? `שלום ${client.name}, ` : ""}הצעת המחיר מופיעה למטה לעיונכם. נשמח לדעת אם תרצו
+              להתקדם.
             </p>
             {errorMessage && <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>}
             {!confirmDecline ? (
@@ -141,7 +141,7 @@ export default function PublicQuote() {
                   onClick={handleApprove}
                   disabled={responding !== null}
                 >
-                  {responding === "approve" ? "Approving..." : "Approve quote"}
+                  {responding === "approve" ? "מאשרים..." : "אישור ההצעה"}
                 </Button>
                 <Button
                   variant="secondary"
@@ -149,12 +149,12 @@ export default function PublicQuote() {
                   onClick={() => setConfirmDecline(true)}
                   disabled={responding !== null}
                 >
-                  Reject quote
+                  דחיית ההצעה
                 </Button>
               </div>
             ) : (
               <div className="rounded-xl border border-red-100 bg-red-50 p-4">
-                <p className="text-sm text-red-700 mb-3">Are you sure you want to reject this quote?</p>
+                <p className="text-sm text-red-700 mb-3">לדחות את הצעת המחיר?</p>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     variant="danger"
@@ -162,7 +162,7 @@ export default function PublicQuote() {
                     onClick={handleDecline}
                     disabled={responding !== null}
                   >
-                    {responding === "decline" ? "Rejecting..." : "Yes, reject it"}
+                    {responding === "decline" ? "דוחים..." : "כן, לדחות"}
                   </Button>
                   <Button
                     variant="secondary"
@@ -170,7 +170,7 @@ export default function PublicQuote() {
                     onClick={() => setConfirmDecline(false)}
                     disabled={responding !== null}
                   >
-                    Cancel
+                    ביטול
                   </Button>
                 </div>
               </div>
@@ -179,24 +179,24 @@ export default function PublicQuote() {
         )}
 
         {quote.status === "accepted" && (
-          <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-center sm:text-left">
+          <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 text-center sm:text-start">
             <p className="text-sm font-semibold text-emerald-700">
-              ✓ You approved this quote{quote.respondedAt ? ` on ${formatDate(quote.respondedAt)}` : ""}.
+              ✓ ההצעה אושרה{quote.respondedAt ? ` בתאריך ${formatDate(quote.respondedAt)}` : ""}.
             </p>
           </div>
         )}
 
         {quote.status === "declined" && (
-          <div className="mb-6 rounded-2xl border border-red-100 bg-red-50 p-5 text-center sm:text-left">
+          <div className="mb-6 rounded-2xl border border-red-100 bg-red-50 p-5 text-center sm:text-start">
             <p className="text-sm font-semibold text-red-700">
-              You rejected this quote{quote.respondedAt ? ` on ${formatDate(quote.respondedAt)}` : ""}.
+              ההצעה נדחתה{quote.respondedAt ? ` בתאריך ${formatDate(quote.respondedAt)}` : ""}.
             </p>
           </div>
         )}
 
         {quote.status === "converted" && (
-          <div className="mb-6 rounded-2xl border border-violet-100 bg-violet-50 p-5 text-center sm:text-left">
-            <p className="text-sm font-semibold text-violet-700">This quote was approved and converted into an invoice.</p>
+          <div className="mb-6 rounded-2xl border border-violet-100 bg-violet-50 p-5 text-center sm:text-start">
+            <p className="text-sm font-semibold text-violet-700">ההצעה אושרה והומרה לחשבונית.</p>
           </div>
         )}
 
@@ -205,7 +205,7 @@ export default function PublicQuote() {
           client={client}
           business={business}
           kind="quote"
-          dateLabel="Valid until"
+          dateLabel="בתוקף עד"
         />
       </div>
     </PublicShell>

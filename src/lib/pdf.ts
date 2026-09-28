@@ -11,7 +11,11 @@ async function renderHtmlToPdf(html: string): Promise<jsPDF> {
   container.style.top = "0"
   container.style.width = "800px"
   container.style.background = "#ffffff"
-  container.innerHTML = html
+  // Hebrew documents: default to RTL even for custom templates that omit dir.
+  container.dir = "rtl"
+  container.setAttribute("data-pdf-render", "")
+  // html2canvas paints box-shadows as solid tinted rectangles over the element, so drop them for the PDF.
+  container.innerHTML = `<style>[data-pdf-render] * { box-shadow: none !important; }</style>${html}`
   document.body.appendChild(container)
 
   try {

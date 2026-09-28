@@ -26,7 +26,7 @@ export default function Reports() {
     const now = new Date()
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const label = d.toLocaleDateString("en-US", { month: "short" })
+      const label = d.toLocaleDateString("he-IL", { month: "short" })
       const revenue = invoices
         .filter((inv) => {
           if (effectiveStatus(inv) !== "paid" || !inv.paidAt) return false
@@ -48,8 +48,8 @@ export default function Reports() {
       else if (inv.status !== "draft") unpaid += total
     }
     return [
-      { name: "Paid", value: Math.round(paid) },
-      { name: "Unpaid", value: Math.round(unpaid) },
+      { name: "שולם", value: Math.round(paid) },
+      { name: "לא שולם", value: Math.round(unpaid) },
     ]
   }, [invoices])
 
@@ -71,7 +71,7 @@ export default function Reports() {
     for (const inv of invoices) {
       if (effectiveStatus(inv) !== "paid") continue
       for (const item of inv.items) {
-        const key = item.description || "Other"
+        const key = item.description || "אחר"
         totals.set(key, (totals.get(key) ?? 0) + lineTotal(item))
       }
     }
@@ -86,21 +86,24 @@ export default function Reports() {
 
   return (
     <div>
-      <PageHeader title="Reports" subtitle="Understand where your revenue is coming from." />
+      <PageHeader title="דוחות" subtitle="כך אפשר להבין מאיפה מגיעות ההכנסות." />
 
       <div className="px-4 lg:px-8 pb-16 space-y-6">
         <Card className="p-5">
-          <h3 className="text-sm font-semibold text-slate-800 mb-4">Revenue over time (12 months)</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">הכנסות לאורך זמן (12 חודשים)</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={revenueByMonth} margin={{ top: 5, right: 10, bottom: 0, left: -10 }}>
+              <BarChart data={revenueByMonth} margin={{ top: 5, right: 0, bottom: 0, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#64748B", fontSize: 12 }} />
+                <XAxis dataKey="label" reversed tickLine={false} axisLine={false} tick={{ fill: "#64748B", fontSize: 12 }} />
                 <YAxis
+                  orientation="right"
                   tickLine={false}
                   axisLine={false}
                   tick={{ fill: "#64748B", fontSize: 12 }}
-                  tickFormatter={(v) => `$${v / 1000}k`}
+                  tickFormatter={(v) =>
+                    new Intl.NumberFormat("he-IL", { style: "currency", currency: business.currency || "ILS", notation: "compact", maximumFractionDigits: 1 }).format(Number(v))
+                  }
                 />
                 <Tooltip
                   formatter={(value) => formatCurrency(Number(value), business.currency)}
@@ -115,7 +118,7 @@ export default function Reports() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">Paid vs unpaid</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">שולם מול לא שולם</h3>
             <div className="flex items-center gap-6">
               <div className="h-44 w-44 shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
@@ -145,9 +148,9 @@ export default function Reports() {
           </Card>
 
           <Card className="p-5">
-            <h3 className="text-sm font-semibold text-slate-800 mb-4">Top clients</h3>
+            <h3 className="text-sm font-semibold text-slate-800 mb-4">לקוחות מובילים</h3>
             {topClients.length === 0 ? (
-              <p className="text-sm text-slate-400">No paid invoices yet.</p>
+              <p className="text-sm text-slate-400">עדיין אין חשבוניות ששולמו.</p>
             ) : (
               <div className="space-y-3">
                 {topClients.map((row) => (
@@ -170,9 +173,9 @@ export default function Reports() {
         </div>
 
         <Card className="p-5">
-          <h3 className="text-sm font-semibold text-slate-800 mb-4">Revenue by service</h3>
+          <h3 className="text-sm font-semibold text-slate-800 mb-4">הכנסות לפי שירות</h3>
           {revenueByService.length === 0 ? (
-            <p className="text-sm text-slate-400">No paid invoices yet.</p>
+            <p className="text-sm text-slate-400">עדיין אין חשבוניות ששולמו.</p>
           ) : (
             <div className="space-y-3">
               {revenueByService.map((row) => (
