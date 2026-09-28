@@ -35,6 +35,14 @@ body {
   border-color: var(--color-border);
 }
 
+/* Browsers center <th> by default, so headers drift away from their cells in RTL tables.
+   Kept in the base layer so text-end and similar utilities still win. */
+@layer base {
+  th {
+    text-align: start;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
