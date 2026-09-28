@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom"
 
-const trustedBy = ["סטודיו צפון", "אור ושות׳", "קו מתאר", "סטודיו תשע", "שדה ירוק"]
-
 const features = [
   {
     title: "כל מה שמגיע לכם, במבט אחד",
-    description: "לוח בקרה אחד מציג כל חשבונית, הצעת מחיר וסטטוס תשלום, בלי לחפור בשרשורי מיילים.",
+    description: "מרכז בקרה אחד מציג כל חשבונית, הצעת מחיר וסטטוס תשלום, בלי לחפור בשרשורי מיילים.",
     span: "lg:col-span-2",
   },
   {
@@ -51,12 +49,11 @@ export default function LandingPage() {
 
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <img src="/logo.jpg" alt="Invoxa" className="h-7 w-auto" />
+          <img src="/logo.png" alt="Invoxa" className="h-7 w-auto" />
           <nav className="hidden md:flex items-center gap-8 text-sm text-slate-600">
             <a href="#features" className="hover:text-slate-900 transition-colors">המוצר</a>
             <a href="#how-it-works" className="hover:text-slate-900 transition-colors">איך זה עובד</a>
             <a href="#for-teams" className="hover:text-slate-900 transition-colors">לצוותים</a>
-            <a href="#pricing" className="hover:text-slate-900 transition-colors">מחירים</a>
           </nav>
           <div className="flex items-center gap-3 sm:gap-4">
             <Link to="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
@@ -108,7 +105,7 @@ export default function LandingPage() {
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <div>
                   <p className="text-xs font-medium text-slate-400">חשבונית INV-00428</p>
-                  <p className="text-sm font-semibold text-slate-900">סטודיו צפון</p>
+                  <p className="text-sm font-semibold text-slate-900">סטודיו טבע</p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> שולמה
@@ -136,20 +133,6 @@ export default function LandingPage() {
                 <p className="font-semibold text-slate-800">התשלום התקבל</p>
                 <p className="text-slate-400">ממש עכשיו · 4,280.00 ₪</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Trust strip */}
-        <section className="border-y border-slate-100 py-10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <p className="text-center text-xs font-semibold tracking-wide text-slate-400 mb-6">עסקים עצמאיים שכבר עובדים איתנו</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
-              {trustedBy.map((name) => (
-                <span key={name} className="text-sm font-semibold text-slate-300">
-                  {name}
-                </span>
-              ))}
             </div>
           </div>
         </section>
@@ -202,14 +185,14 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-slate-800">
               לפרילנסרים, לצוותים קטנים ולכל מי שבונה את הדבר הבא.
             </p>
-            <a href="#pricing" className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
-              למחירים <span aria-hidden="true">←</span>
-            </a>
+            <Link to="/signup" className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors">
+              התחילו בחינם <span aria-hidden="true">←</span>
+            </Link>
           </div>
         </section>
 
         {/* Final CTA */}
-        <section id="pricing" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+        <section id="get-started" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="rounded-3xl bg-blue-600 px-6 sm:px-10 py-16 sm:py-20 text-center text-white">
             <p className="text-xs font-semibold tracking-wide text-blue-200 mb-4">מתחילים יום צלול יותר</p>
             <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight text-balance">
@@ -230,7 +213,7 @@ export default function LandingPage() {
       <footer className="border-t border-slate-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 grid grid-cols-1 sm:grid-cols-3 gap-10">
           <div>
-            <img src="/logo.jpg" alt="Invoxa" className="h-6 w-auto mb-3" />
+            <img src="/logo.png" alt="Invoxa" className="h-6 w-auto mb-3" />
             <p className="text-sm text-slate-400 max-w-xs">הדרך הרגועה לנהל את העסק.</p>
           </div>
           <div>
@@ -238,7 +221,6 @@ export default function LandingPage() {
             <ul className="space-y-2 text-sm text-slate-500">
               <li><a href="#features" className="hover:text-slate-800">יכולות</a></li>
               <li><a href="#how-it-works" className="hover:text-slate-800">איך זה עובד</a></li>
-              <li><a href="#pricing" className="hover:text-slate-800">מחירים</a></li>
             </ul>
           </div>
           <div>

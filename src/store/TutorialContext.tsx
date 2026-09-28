@@ -16,7 +16,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     path: "/dashboard",
     target: "dashboard-overview",
     title: "מתחילים כאן",
-    description: "לוח הבקרה מציג תמונת מצב מהירה של העסק.",
+    description: "מרכז הבקרה מציג תמונת מצב מהירה של העסק.",
     placement: "bottom",
   },
   {

@@ -4,7 +4,7 @@ import { useData } from "../store/DataContext"
 import { useAuth } from "../store/AuthContext"
 
 const navItems = [
-  { to: "/dashboard", label: "לוח בקרה", icon: DashboardIcon, end: true },
+  { to: "/dashboard", label: "מרכז הבקרה", icon: DashboardIcon, end: true },
   { to: "/invoices", label: "חשבוניות", icon: InvoiceIcon },
   { to: "/quotes", label: "הצעות מחיר", icon: QuoteIcon },
   { to: "/clients", label: "לקוחות", icon: ClientsIcon },
@@ -32,7 +32,7 @@ export default function Layout() {
     <div className="min-h-screen bg-slate-50 lg:flex">
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:start-0 border-e border-slate-200 bg-white">
         <div className="flex items-center px-6 h-16 border-b border-slate-100">
-          <img src="/logo.jpg" alt="Invoxa" className="h-8 w-auto" />
+          <img src="/logo.png" alt="Invoxa" className="h-8 w-auto" />
         </div>
 
         <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
@@ -52,20 +52,6 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
-
-        <div className="mx-3 mb-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
-          <p className="text-xs font-semibold text-blue-700">תוכנית חינמית</p>
-          <p className="mt-1 text-xs text-slate-500">נוצלו 3 מתוך 5 חשבוניות החודש.</p>
-          <div className="mt-2 h-1.5 w-full rounded-full bg-blue-100">
-            <div className="h-1.5 w-3/5 rounded-full bg-blue-600" />
-          </div>
-          <button
-            onClick={() => navigate("/settings?upgrade=1")}
-            className="mt-3 w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-          >
-            שדרוג ל-Pro
-          </button>
-        </div>
 
         <div className="flex items-center gap-3 border-t border-slate-100 px-4 py-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-800 text-white text-sm font-semibold overflow-hidden">

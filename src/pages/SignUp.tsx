@@ -146,7 +146,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center mb-8">
           <Link to="/">
-            <img src="/logo.jpg" alt="Invoxa" className="h-8 w-auto" />
+            <img src="/logo.png" alt="Invoxa" className="h-8 w-auto" />
           </Link>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 sm:p-8">{children}</div>

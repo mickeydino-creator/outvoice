@@ -10,43 +10,6 @@ import { DEFAULT_INVOICE_TEMPLATE, DEFAULT_QUOTE_TEMPLATE, renderInvoiceTemplate
 import { sanitizeHtml } from "../lib/sanitizeHtml"
 import type { Client } from "../types"
 
-const plans = [
-  {
-    name: "Free",
-    label: "חינמית",
-    upgradeLabel: "מעבר לתוכנית החינמית",
-    price: "$0",
-    tagline: "מושלמת כדי להתחיל",
-    features: ["עד 5 חשבוניות בחודש", "תבניות חשבונית בסיסיות", "ניהול לקוחות"],
-    current: true,
-  },
-  {
-    name: "Pro",
-    label: "Pro",
-    upgradeLabel: "שדרוג ל-Pro",
-    price: "$15",
-    tagline: "לפרילנסרים וסוכנויות בצמיחה",
-    features: [
-      "חשבוניות ללא הגבלה",
-      "הצעות מחיר",
-      "מעקב תשלומים",
-      "הורדת PDF",
-      "מיתוג מותאם אישית",
-      "תזכורות אוטומטיות",
-      "דוחות",
-    ],
-    highlight: true,
-  },
-  {
-    name: "Business",
-    label: "עסקית",
-    upgradeLabel: "שדרוג לתוכנית העסקית",
-    price: "$39",
-    tagline: "לצוותים שמנהלים כמה עסקים",
-    features: ["כל מה שיש ב-Pro", "משתמשים מרובים בצוות", "ניהול כמה עסקים", "דוחות מתקדמים", "תמיכה בעדיפות"],
-  },
-]
-
 // Stored values stay in English for compatibility with existing data; only the labels are localized.
 const BUSINESS_TYPES = [
   { value: "Freelancer", label: "פרילנסר" },
@@ -82,7 +45,6 @@ const tabs = [
   { key: "templates", label: "תבניות מסמכים" },
   { key: "reminders", label: "תזכורות" },
   { key: "account", label: "חשבון" },
-  { key: "billing", label: "תוכנית וחיוב" },
 ] as const
 
 type TabKey = (typeof tabs)[number]["key"]
@@ -92,7 +54,7 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader title="הגדרות" subtitle="ניהול פרופיל העסק, ברירות המחדל לחשבוניות והתוכנית." />
+      <PageHeader title="הגדרות" subtitle="ניהול פרופיל העסק וברירות המחדל לחשבוניות." />
 
       <div className="px-4 lg:px-8 pb-16">
         <div className="flex gap-2 overflow-x-auto pb-1 mb-6 border-b border-slate-200">
@@ -116,7 +78,6 @@ export default function Settings() {
         {tab === "templates" && <DocumentTemplatesTab />}
         {tab === "reminders" && <RemindersTab />}
         {tab === "account" && <AccountTab />}
-        {tab === "billing" && <BillingTab />}
       </div>
     </div>
   )
@@ -561,61 +522,6 @@ function AccountTab() {
   )
 }
 
-function BillingTab() {
-  const { showToast } = useToast()
-  return (
-    <div>
-      <div className="mb-4">
-        <h3 className="text-base font-semibold text-slate-900">תוכנית וחיוב</h3>
-        <p className="text-sm text-slate-500 mt-1">אפשר לשדרג בכל עת - כל הנתונים נשארים בדיוק במקומם.</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {plans.map((plan) => (
-          <Card
-            key={plan.name}
-            className={`p-5 flex flex-col ${plan.highlight ? "border-blue-300 ring-1 ring-blue-100" : ""}`}
-          >
-            {plan.highlight && (
-              <span className="self-start mb-3 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-600">
-                הכי פופולרית
-              </span>
-            )}
-            <h4 className="text-base font-semibold text-slate-900">{plan.label}</h4>
-            <p className="text-sm text-slate-500 mt-0.5">{plan.tagline}</p>
-            <p className="mt-4 text-2xl font-semibold text-slate-900">
-              {plan.price}
-              <span className="text-sm font-normal text-slate-400"> / לחודש</span>
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-slate-600 flex-1">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <CheckIcon />
-                  {f}
-                </li>
-              ))}
-            </ul>
-            <Button
-              variant={plan.current ? "secondary" : plan.highlight ? "primary" : "secondary"}
-              className="mt-5 w-full"
-              disabled={plan.current}
-              onClick={() => showToast(`נבחרה התוכנית ${plan.label} - התשלום יהיה זמין בקרוב`, "info")}
-            >
-              {plan.current ? "התוכנית הנוכחית" : plan.upgradeLabel}
-            </Button>
-          </Card>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg className="h-4 w-4 mt-0.5 shrink-0 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
-}
 
 const TEMPLATE_VARIABLES = {
   invoice: [

@@ -126,7 +126,7 @@ export default function Dashboard() {
                     formatter={(value) => formatCurrency(Number(value), business.currency)}
                     contentStyle={{ borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 13 }}
                   />
-                  <Area type="monotone" dataKey="revenue" stroke="#2563EB" strokeWidth={2.5} fill="url(#revFill)" />
+                  <Area type="monotone" dataKey="revenue" name="הכנסה" stroke="#2563EB" strokeWidth={2.5} fill="url(#revFill)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

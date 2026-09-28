@@ -110,7 +110,7 @@ export default function Reports() {
                   contentStyle={{ borderRadius: 12, border: "1px solid #E2E8F0", fontSize: 13 }}
                   cursor={{ fill: "#F1F5F9" }}
                 />
-                <Bar dataKey="revenue" fill="#2563EB" radius={[6, 6, 0, 0]} maxBarSize={36} />
+                <Bar dataKey="revenue" name="הכנסה" fill="#2563EB" radius={[6, 6, 0, 0]} maxBarSize={36} />
               </BarChart>
             </ResponsiveContainer>
           </div>

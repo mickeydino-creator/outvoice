@@ -82,7 +82,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="flex items-center justify-center mb-8">
-          <img src="/logo.jpg" alt="Invoxa" className="h-8 w-auto" />
+          <img src="/logo.png" alt="Invoxa" className="h-8 w-auto" />
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 sm:p-8">
@@ -100,7 +100,7 @@ export default function Onboarding() {
             <StepShell title="מה שם העסק?" subtitle="השם יופיע על החשבוניות והצעות המחיר.">
               <Input
                 autoFocus
-                placeholder="לדוגמה: סטודיו צפון לעיצוב"
+                placeholder="לדוגמה: סטודיו טבע לעיצוב"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
@@ -191,7 +191,7 @@ export default function Onboarding() {
               </Button>
             ) : (
               <Button type="button" variant="primary" disabled={!canContinue} onClick={handleFinish}>
-                מעבר ללוח הבקרה
+                מעבר למרכז הבקרה
               </Button>
             )}
           </div>
